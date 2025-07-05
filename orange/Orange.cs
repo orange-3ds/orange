@@ -1,5 +1,4 @@
-﻿using System;
-using OrangeLib;
+﻿using OrangeLib;
 
 namespace Orange
 {
@@ -12,7 +11,7 @@ namespace Orange
                 Info.Help();
                 Console.WriteLine("Usage: orange [command] [options]");
                 Utils.RunCommandStreamOutput("echo Hey!");
-            }   
+            }
             else if (args[0] == "--version" || args[0] == "-v")
             {
                 Info.Version();
