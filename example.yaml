@@ -1,0 +1,31 @@
+# Basic Project configuration.
+name: Example Project
+author: Example Author
+dependencies:
+    - m
+    - ctru
+
+
+
+# Advanced configuration. Please only edit if yoy know what your doing
+
+
+# Directorys
+BUILD: build
+SOURCES: source
+DATA: data
+INCLUDES: include
+GRAPHICS: gfx
+ROMFS: romfs
+GFXBUILD: romfs/gfx
+
+# Compiling options 
+#
+ARCH:
+    - -march=armv6k
+    - -mtune=mpcore
+    - -mfloat-abi=hard
+    - -mtp=soft
+CFLAGS:
+    - -g
+    - -Wall
