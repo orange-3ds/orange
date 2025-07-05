@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "orange", "orange\orange.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "orangelib", "orangelib\orangelib.csproj", "{0471B599-AEFF-40F0-A644-F4C48F39635A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Installer", "Installer\Installer.csproj", "{0E6460AB-625C-4FFD-8C68-2EC95F5BE3DE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{0471B599-AEFF-40F0-A644-F4C48F39635A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0471B599-AEFF-40F0-A644-F4C48F39635A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0471B599-AEFF-40F0-A644-F4C48F39635A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E6460AB-625C-4FFD-8C68-2EC95F5BE3DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E6460AB-625C-4FFD-8C68-2EC95F5BE3DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E6460AB-625C-4FFD-8C68-2EC95F5BE3DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E6460AB-625C-4FFD-8C68-2EC95F5BE3DE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

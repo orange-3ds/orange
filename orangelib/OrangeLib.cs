@@ -132,9 +132,4 @@ namespace OrangeLib
             System.Console.WriteLine($"Orange Version {_version}");
         }
     }
-    public class ProjectInfo
-    {
-        public string Name { get; set; } = string.Empty;
-        
-    }
 }
