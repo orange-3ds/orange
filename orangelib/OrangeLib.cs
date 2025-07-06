@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
-
+using OrangeInfoLib;
 namespace OrangeLib
 {
     public static class Utils
@@ -130,6 +130,41 @@ namespace OrangeLib
         static public void Version()
         {
             System.Console.WriteLine($"Orange Version {_version}");
+        }
+    }
+    public static class Compile
+    {
+        public static bool GccCompile(string arguments)
+        {
+            string command;
+            if (string.IsNullOrWhiteSpace(arguments))
+            {
+                Console.Error.WriteLine("No arguments provided for GCC compilation.");
+                return false;
+            }
+            if (Utils.IsWindows())
+            {
+                command = $@"C:\devkitPro\devkitARM\bin\arm-none-eabi-gcc.exe {arguments}";
+            }
+            else if (Utils.IsLinux() || Utils.IsMacOS())
+            {
+                command = "./opt/devkitpro/devkitARM/bin/arm-none-eabi-gcc " + arguments;
+            }
+            else
+            {
+                Console.Error.WriteLine("Unsupported OS platform for GCC compilation.");
+                return false;
+            }
+            try
+            {
+                Utils.RunCommandStreamOutput(command);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"GCC compilation failed: {ex.Message}");
+                return false;
+            }
+            return true;
         }
     }
 }
