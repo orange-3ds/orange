@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>    <ProjectReference Include="..\OrangeInfoLib\orangeinfolib.csproj" />
+  <ItemGroup>
     <ProjectReference Include="..\configlibnet\configlibnet.csproj" />
     <ProjectReference Include="..\orangelib\orangelib.csproj" />
   </ItemGroup>
