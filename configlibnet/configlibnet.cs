@@ -9,39 +9,77 @@
         {
             var config = new ConfigFile();
             string? currentSection = null;
+
             foreach (var rawLine in buffer.Split(new[] { '\n', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
             {
                 var line = rawLine.Trim();
-                if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#"))
+
+                if (IsCommentOrEmpty(line))
                     continue;
-                if (line.StartsWith("[") && line.EndsWith("]"))
+
+                if (IsSectionHeader(line, out var sectionName))
                 {
-                    currentSection = line[1..^1].Trim();
-                    config.sections.TryAdd(currentSection, new Dictionary<string, string>());
-                    config.arraySections.TryAdd(currentSection, new List<string>());
+                    currentSection = sectionName;
+                    InitializeSection(config, currentSection);
                     continue;
                 }
+
                 if (currentSection == null)
                     continue;
-                // Remove inline comments after #
-                int commentIdx = line.IndexOf('#');
-                if (commentIdx >= 0)
-                    line = line.Substring(0, commentIdx).TrimEnd();
+
+                line = RemoveInlineComment(line);
+
                 if (string.IsNullOrWhiteSpace(line))
                     continue;
-                if (line.Contains(":"))
-                {
-                    var idx = line.IndexOf(":");
-                    var key = line[..idx].Trim();
-                    var value = line[(idx + 1)..].Trim();
-                    config.sections[currentSection][key] = value;
-                }
-                else
-                {
-                    config.arraySections[currentSection].Add(line);
-                }
+
+                ProcessLine(config, currentSection, line);
             }
+
             return config;
+        }
+
+        private static bool IsCommentOrEmpty(string line)
+        {
+            return string.IsNullOrWhiteSpace(line) || line.StartsWith("#");
+        }
+
+        private static bool IsSectionHeader(string line, out string sectionName)
+        {
+            if (line.StartsWith("[") && line.EndsWith("]"))
+            {
+                sectionName = line[1..^1].Trim();
+                return true;
+            }
+
+            sectionName = string.Empty;
+            return false;
+        }
+
+        private static void InitializeSection(ConfigFile config, string section)
+        {
+            config.sections.TryAdd(section, new Dictionary<string, string>());
+            config.arraySections.TryAdd(section, new List<string>());
+        }
+
+        private static string RemoveInlineComment(string line)
+        {
+            int commentIdx = line.IndexOf('#');
+            return commentIdx >= 0 ? line.Substring(0, commentIdx).TrimEnd() : line;
+        }
+
+        private static void ProcessLine(ConfigFile config, string currentSection, string line)
+        {
+            if (line.Contains(":"))
+            {
+                var idx = line.IndexOf(":");
+                var key = line[..idx].Trim();
+                var value = line[(idx + 1)..].Trim();
+                config.sections[currentSection][key] = value;
+            }
+            else
+            {
+                config.arraySections[currentSection].Add(line);
+            }
         }
 
         public string? GetVariable(string section, string key)
