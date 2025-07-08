@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
+//TODO: Make installer
 namespace Installer
 {
     static class Program

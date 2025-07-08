@@ -1,6 +1,9 @@
 ﻿using configlibnet;
+
+//TODO: Move this code to OrangeLib.cs or a new file in the project.
 namespace OrangeInfoLib
 {
+    [Obsolete("Code will be moved to OrangeLib and removed from OrangeinfoLib.")]
     public struct Information
     {
         public string Title;
@@ -9,6 +12,7 @@ namespace OrangeInfoLib
         public string Dependencies;
         public string ReadmeContents;
     }
+    [Obsolete("Code will be moved to OrangeLib and removed from OrangeinfoLib.")]
     public class PackageInfo
     {
         protected string Title = "Oranges";
@@ -35,7 +39,7 @@ namespace OrangeInfoLib
             string result = ArrayToStringSpaceSeperate(Dependencies);
             return result;
         }
-        public string GetReadmeContents(string path)
+        static public string GetReadmeContents(string path)
         {
             string contents = File.ReadAllText(path);
             return contents;
