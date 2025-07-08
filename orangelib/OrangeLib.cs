@@ -1,7 +1,7 @@
-﻿using OrangeInfoLib;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
+using OrangeLib.Info;
 namespace OrangeLib
 {
     public static class Utils

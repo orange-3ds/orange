@@ -1,6 +1,6 @@
 ﻿using configlibnet;
 
-namespace OrangeInfoLib
+namespace OrangeLib.Info
 {
     public struct Information
     {

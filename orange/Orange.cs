@@ -1,5 +1,5 @@
 ﻿using OrangeLib;
-using OrangeInfoLib;
+using OrangeLib.Info;
 
 namespace Orange
 {
