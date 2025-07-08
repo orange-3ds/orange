@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace configlibnet
+﻿namespace configlibnet
 {
     public class ConfigFile
     {
@@ -13,7 +9,6 @@ namespace configlibnet
         {
             var config = new ConfigFile();
             string? currentSection = null;
-            bool isArraySection = false;
             foreach (var rawLine in buffer.Split(new[] { '\n', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
             {
                 var line = rawLine.Trim();
@@ -22,13 +17,17 @@ namespace configlibnet
                 if (line.StartsWith("[") && line.EndsWith("]"))
                 {
                     currentSection = line[1..^1].Trim();
-                    isArraySection = false;
-                    // If next lines are not key:value, treat as array section
                     config.sections.TryAdd(currentSection, new Dictionary<string, string>());
                     config.arraySections.TryAdd(currentSection, new List<string>());
                     continue;
                 }
                 if (currentSection == null)
+                    continue;
+                // Remove inline comments after #
+                int commentIdx = line.IndexOf('#');
+                if (commentIdx >= 0)
+                    line = line.Substring(0, commentIdx).TrimEnd();
+                if (string.IsNullOrWhiteSpace(line))
                     continue;
                 if (line.Contains(":"))
                 {

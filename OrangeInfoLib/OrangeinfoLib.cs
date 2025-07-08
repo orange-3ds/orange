@@ -3,35 +3,42 @@ namespace OrangeInfoLib
 {
     public struct Information
     {
-        public string AppTitle; 
-        public string AppDescription;
-        public string AppAuthor; 
+        public string Title;
+        public string Description;
+        public string Author;
         public string Dependencies;
+        public string ReadmeContents;
     }
-    public class ProjectInfo
+    public class PackageInfo
     {
-        protected string AppTitle = "Oranges";
-        protected string AppDescription = "3ds Homebrew application";
-        protected string AppAuthor = "Me :)";
-        protected string[] Dependencies = new string[] { "-lctru", "-m" };
-        
+        protected string Title = "Oranges";
+        protected string Description = "3ds Homebrew library";
+        protected string Author = "Me :)";
+        protected string[] Dependencies = new string[] { };
+        protected string ReadmeContents = "Oranges readme.";
 
-        public string GetAppTitle()
+
+        public string GetPackageTitle()
         {
-            return AppTitle;
+            return Title;
         }
-        public string GetAppDescription()
+        public string GetPackageDescription()
         {
-            return AppDescription;
+            return Description;
         }
-        public string GetAppAuthor()
+        public string GetPackageAuthor()
         {
-            return AppAuthor;
+            return Author;
         }
         public string GetDependencies()
         {
             string result = ArrayToStringSpaceSeperate(Dependencies);
             return result;
+        }
+        public string GetReadmeContents(string path)
+        {
+            string contents = File.ReadAllText(path);
+            return contents;
         }
         public static string ArrayToStringSpaceSeperate(string[] array)
         {
@@ -45,10 +52,11 @@ namespace OrangeInfoLib
         {
             return new Information
             {
-                AppTitle = GetAppTitle(),
-                AppDescription = GetAppDescription(),
-                AppAuthor = GetAppAuthor(),
-                Dependencies = GetDependencies()
+                Title = GetPackageTitle(),
+                Description = GetPackageDescription(),
+                Author = GetPackageAuthor(),
+                Dependencies = GetDependencies(),
+                ReadmeContents = ReadmeContents
             };
         }
         public Information LoadCfg(string filename)
@@ -62,10 +70,18 @@ namespace OrangeInfoLib
             string filebuffer = File.ReadAllText(filename);
             ConfigFile configFile = ConfigFile.Parse(filebuffer);
             // Get information from config file
-            AppTitle = configFile.GetVariable("info", "AppTitle") ?? AppTitle;
-            AppDescription = configFile.GetVariable("info", "AppDescription") ?? AppDescription;
-            AppAuthor = configFile.GetVariable("info", "AppAuthor") ?? AppAuthor;
+            Title = configFile.GetVariable("info", "Title") ?? Title;
+            Description = configFile.GetVariable("info", "Description")  ?? Description;
+            Author = configFile.GetVariable("info", "Author") ?? Author;
             Dependencies = configFile.GetArray("dependencies");
+            string readmePath = configFile.GetVariable("info", "README") ?? ReadmeContents;
+            // Resolve relative path to config file directory
+            if (!string.IsNullOrWhiteSpace(readmePath) && !System.IO.Path.IsPathRooted(readmePath))
+            {
+                string configDir = System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(filename)) ?? string.Empty;
+                readmePath = System.IO.Path.Combine(configDir, readmePath);
+            }
+            ReadmeContents = System.IO.File.Exists(readmePath) ? GetReadmeContents(readmePath) : $"README file not found: {readmePath}";
             // Return information
             return GetInformation();
         }
