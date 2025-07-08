@@ -41,8 +41,19 @@ namespace OrangeInfoLib
         }
         static public string GetReadmeContents(string path)
         {
-            string contents = File.ReadAllText(path);
-            return contents;
+            try
+            {
+                if (string.IsNullOrWhiteSpace(path))
+                    return "README path not provided";
+                if (!File.Exists(path))
+                    return $"README file not found: {path}";
+                
+                return File.ReadAllText(path);
+            }
+            catch (Exception ex)
+            {
+                return $"Error reading README file '{path}': {ex.Message}";
+            }
         }
         public static string ArrayToStringSpaceSeperate(string[] array)
         {
