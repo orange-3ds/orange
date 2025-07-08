@@ -1,4 +1,5 @@
 ﻿using OrangeLib;
+using OrangeLib.Info;
 
 namespace Orange
 {
@@ -8,13 +9,18 @@ namespace Orange
         {
             if (args.Length == 0 || args[0] == "--help")
             {
-                Info.Help();
-                Console.WriteLine("Usage: orange [command] [options]");
-                Utils.RunCommandStreamOutput("echo Hey!");
+                Utils.Messages.Help();
+                PackageInfo packageloader = new PackageInfo();
+                // The following code is for testing
+                var package = packageloader.LoadCfg("package.cfg");
+                Console.WriteLine($"Package Title: {package.Title}");
+                Console.WriteLine($"Package Description: {package.Description}");
+                Console.WriteLine($"Package Author: {package.Author}");
+                Console.WriteLine($"Package Readme Contents: {package.ReadmeContents}");
             }
             else if (args[0] == "--version" || args[0] == "-v")
             {
-                Info.Version();
+                Utils.Messages.Version();
             }
             else
             {

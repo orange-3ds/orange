@@ -187,8 +187,8 @@ publish/
 *.pubxml
 *.publishproj
 
-# Microsoft Azure Web App publish settings. Comment the next line if you want to
-# checkin your Azure Web App publish settings, but sensitive information contained
+# Microsoft Azure Web Package publish settings. Comment the next line if you want to
+# checkin your Azure Web Package publish settings, but sensitive information contained
 # in these scripts will be unencrypted
 PublishScripts/
 
@@ -215,7 +215,7 @@ ecf/
 rcf/
 
 # Windows Store app package directories and files
-AppPackages/
+PackagePackages/
 BundleArtifacts/
 Package.StoreAssociation.xml
 _pkginfo.txt

@@ -8,10 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="YamlDotNet" Version="16.3.0" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <ProjectReference Include="..\configlibnet\configlibnet.csproj" />
     <ProjectReference Include="..\orangelib\orangelib.csproj" />
   </ItemGroup>
 

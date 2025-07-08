@@ -12,7 +12,7 @@
 
 </center>
 
-Build system for the 3ds.
+Devkitpro package manager.
 
 
 
