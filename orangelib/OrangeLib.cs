@@ -1,7 +1,7 @@
-﻿using System.Diagnostics;
+﻿using OrangeLib.Info;
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
-using OrangeLib.Info;
 namespace OrangeLib
 {
     public static class Utils
@@ -123,27 +123,13 @@ namespace OrangeLib
         {
             ZipFile.CreateFromDirectory(SourceDir, ZipName);
         }
-        // TODO: Remove this class and move the print invocations to the main program (orange)
-        [Obsolete("This only going to be in beta releases!")]
-        static public class Messages
+    }
+    // TODO: Write logic
+    static public class Package
+    {
+        public static void CreatePackage(Information packageinfo)
         {
-            static readonly string _version = "0.0.0 Beta";
-            static public void Help()
-            {
-                System.Console.WriteLine("Usage: orange [command] [options]");
-            }
-            static public void Version()
-            {
-                System.Console.WriteLine($"Orange Version {_version}");
-            }
-        }
-        // TODO: Write logic
-        static public class Package
-        {
-            public static void CreatePackage(Information packageinfo)
-            {
-                // INDEV
-            }
+            // INDEV
         }
     }
 }
