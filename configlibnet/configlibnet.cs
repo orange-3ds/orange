@@ -95,5 +95,23 @@
                 return list.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
             return Array.Empty<string>();
         }
+
+        public void AddToArray(string section, string value)
+        {
+            if (!arraySections.ContainsKey(section))
+            {
+                arraySections[section] = new List<string>();
+            }
+            arraySections[section].Add(value);
+        }
+
+        public void SetVariable(string section, string key, string value)
+        {
+            if (!sections.ContainsKey(section))
+            {
+                sections[section] = new Dictionary<string, string>();
+            }
+            sections[section][key] = value;
+        }
     }
 }

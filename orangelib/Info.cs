@@ -19,6 +19,7 @@ namespace OrangeLib.Info
         protected string ReadmeContents = "Oranges readme.";
 
 
+
         public string GetPackageTitle()
         {
             return Title;
@@ -70,6 +71,40 @@ namespace OrangeLib.Info
                 Dependencies = GetDependencies(),
                 ReadmeContents = ReadmeContents
             };
+        }
+        public Information AddDependencyToCfg(string dependency)
+        {
+            // Assume config file is named "package.cfg" in current directory
+            string cfgPath = "package.cfg";
+            if (!File.Exists(cfgPath))
+                throw new FileNotFoundException("Configuration file not found.", cfgPath);
+
+            string filebuffer = File.ReadAllText(cfgPath);
+            ConfigFile configFile = ConfigFile.Parse(filebuffer);
+
+            // Add dependency to the config
+            configFile.AddToArray("dependencies", dependency);
+
+            // Update the in-memory Dependencies field
+            Dependencies = configFile.GetArray("dependencies");
+
+            // Save the updated config back to the file
+            using (var writer = new StreamWriter(cfgPath, false))
+            {
+                writer.WriteLine("[info]");
+                writer.WriteLine($"Title: {Title}");
+                writer.WriteLine($"Description: {Description}");
+                writer.WriteLine($"Author: {Author}");
+                writer.WriteLine($"README: {ReadmeContents}");
+                writer.WriteLine();
+                writer.WriteLine("[dependencies]");
+                foreach (var dep in Dependencies)
+                {
+                    writer.WriteLine(dep);
+                }
+            }
+
+            return GetInformation();
         }
         public Information LoadCfg(string filename)
         {
