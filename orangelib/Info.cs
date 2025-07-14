@@ -18,8 +18,6 @@ namespace OrangeLib.Info
         protected string[] Dependencies = new string[] { };
         protected string ReadmeContents = "Oranges readme.";
 
-
-
         public string GetPackageTitle()
         {
             return Title;
@@ -60,7 +58,6 @@ namespace OrangeLib.Info
             return string.Join(" ", array);
         }
 
-
         public Information GetInformation()
         {
             return new Information
@@ -72,40 +69,80 @@ namespace OrangeLib.Info
                 ReadmeContents = ReadmeContents
             };
         }
-        public Information AddDependencyToCfg(string dependency)
+
+        // Helper: Validate dependency
+        private static bool IsValidDependency(string dependency)
         {
-            // Assume config file is named "package.cfg" in current directory
-            string cfgPath = "package.cfg";
+            return !string.IsNullOrWhiteSpace(dependency);
+        }
+
+        // Helper: Read config file
+        private static ConfigFile ReadConfig(string cfgPath)
+        {
             if (!File.Exists(cfgPath))
                 throw new FileNotFoundException("Configuration file not found.", cfgPath);
-
             string filebuffer = File.ReadAllText(cfgPath);
-            ConfigFile configFile = ConfigFile.Parse(filebuffer);
+            return ConfigFile.Parse(filebuffer);
+        }
 
-            // Add dependency to the config
-            configFile.AddToArray("dependencies", dependency);
-
-            // Update the in-memory Dependencies field
-            Dependencies = configFile.GetArray("dependencies");
-
-            // Save the updated config back to the file
+        // Helper: Write config file, preserving comments and formatting
+        private static void WriteConfigWithUpdatedDependencies(string cfgPath, ConfigFile configFile, string[] dependencies)
+        {
+            var lines = File.ReadAllLines(cfgPath);
             using (var writer = new StreamWriter(cfgPath, false))
             {
-                writer.WriteLine("[info]");
-                writer.WriteLine($"Title: {Title}");
-                writer.WriteLine($"Description: {Description}");
-                writer.WriteLine($"Author: {Author}");
-                writer.WriteLine($"README: {ReadmeContents}");
-                writer.WriteLine();
-                writer.WriteLine("[dependencies]");
-                foreach (var dep in Dependencies)
+                bool inDependencies = false;
+                foreach (var line in lines)
                 {
-                    writer.WriteLine(dep);
+                    if (line.Trim() == "[dependencies]")
+                    {
+                        writer.WriteLine(line);
+                        inDependencies = true;
+                        // Write updated dependencies
+                        foreach (var dep in dependencies)
+                            writer.WriteLine(dep);
+                        continue;
+                    }
+                    if (inDependencies)
+                    {
+                        // Skip old dependencies
+                        if (line.StartsWith("["))
+                        {
+                            inDependencies = false;
+                            writer.WriteLine(line);
+                        }
+                        // else skip
+                        continue;
+                    }
+                    // For README, write path not contents
+                    if (line.StartsWith("README:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        string readmePath = configFile.GetVariable("info", "README") ?? "README.md";
+                        writer.WriteLine($"README: {readmePath}");
+                        continue;
+                    }
+                    writer.WriteLine(line);
                 }
             }
+        }
 
+        // Refactored method
+        public Information AddDependencyToCfg(string dependency, string cfgPath)
+        {
+            if (!IsValidDependency(dependency))
+                throw new ArgumentException("Invalid dependency.", nameof(dependency));
+
+            var configFile = ReadConfig(cfgPath);
+            var currentDeps = configFile.GetArray("dependencies").ToList();
+            if (currentDeps.Contains(dependency))
+                throw new InvalidOperationException($"Dependency '{dependency}' already exists.");
+            currentDeps.Add(dependency);
+            configFile.AddToArray("dependencies", dependency);
+            Dependencies = currentDeps.ToArray();
+            WriteConfigWithUpdatedDependencies(cfgPath, configFile, Dependencies);
             return GetInformation();
         }
+
         public Information LoadCfg(string filename)
         {
             if (string.IsNullOrWhiteSpace(filename))

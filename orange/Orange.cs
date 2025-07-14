@@ -30,7 +30,7 @@ namespace Orange
                     var packageconfig = packageloader.LoadCfg("package.cfg");
                     OrangeLib.Package.InstallPackage(packagePath);
                     // Add dependency to config
-                    packageloader.AddDependencyToCfg(packagePath);
+                    packageloader.AddDependencyToCfg(packagePath, "package.cfg");
                     Console.WriteLine("Sucessfully added the dependency.");
                 }
                 catch (Exception ex)
