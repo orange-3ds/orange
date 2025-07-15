@@ -132,12 +132,15 @@ namespace OrangeLib.Info
             if (!IsValidDependency(dependency))
                 throw new ArgumentException("Invalid dependency.", nameof(dependency));
 
+            // Always use only the filename without extension
+            string depName = Path.GetFileNameWithoutExtension(dependency);
+
             var configFile = ReadConfig(cfgPath);
             var currentDeps = configFile.GetArray("dependencies").ToList();
-            if (currentDeps.Contains(dependency))
-                throw new InvalidOperationException($"Dependency '{dependency}' already exists.");
-            currentDeps.Add(dependency);
-            configFile.AddToArray("dependencies", dependency);
+            if (currentDeps.Contains(depName))
+                throw new InvalidOperationException($"Dependency '{depName}' already exists.");
+            currentDeps.Add(depName);
+            configFile.AddToArray("dependencies", depName);
             Dependencies = currentDeps.ToArray();
             WriteConfigWithUpdatedDependencies(cfgPath, configFile, Dependencies);
             return GetInformation();

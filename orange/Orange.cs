@@ -4,7 +4,7 @@ namespace Orange
 {
     public static class Commands
     {
-        static public void add(string[] args)
+        static public void Add(string[] args)
         {
             // Validate argument count
             if (args.Length < 2)
