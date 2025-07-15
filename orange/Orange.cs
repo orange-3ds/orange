@@ -27,7 +27,7 @@ namespace Orange
                 {
                     // load package cfg
                     PackageInfo packageloader = new PackageInfo();
-                    var packageconfig = packageloader.LoadCfg("package.cfg");
+                    packageloader.LoadCfg("package.cfg");
                     OrangeLib.Package.InstallPackage(packagePath);
                     // Add dependency to config
                     packageloader.AddDependencyToCfg(packagePath, "package.cfg");
@@ -54,7 +54,6 @@ Commands:
     - add (package path) ";
         static void Main(string[] args)
         {
-            var packageloader = new PackageInfo();
             if (args.Length == 0 || args[0] == "--help")
             {
                 // Write _help text
