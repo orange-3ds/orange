@@ -11,7 +11,7 @@ namespace Tests
             Assert.Equal("hi", output);
         }
         [Fact]
-        public void TestRunCOmmandStreamOutputChecked()
+        public void TestRunCommandStreamOutputChecked()
         {
             Assert.True(OrangeLib.Utils.RunCommandStreamOutputChecked("echo hi"));
         }
