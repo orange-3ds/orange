@@ -1,10 +1,13 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace OrangeLib.Net
 {
     public static class Internet
     {
-        static string _webPath = "https://orange.orbical.xyz/";
+        private const string DefaultWebPath = "https://orange.orbical.xyz/";
+        static string _webPath = DefaultWebPath;
 
         public static string GetWebPath()
         {
@@ -20,7 +23,7 @@ namespace OrangeLib.Net
         }
         public static void ResetWebPath()
         {
-            _webPath = "https://orange.orbical.xyz/";
+            _webPath = DefaultWebPath;
         }
         public static async Task GetPackage(string packageName)
         {
@@ -30,14 +33,26 @@ namespace OrangeLib.Net
             }
             string url = $"{_webPath}packages/{packageName}.zip";
             Console.WriteLine($"Fetching package from: {url}");
-            // TODO: Implement Download Logic
-            // Get File from url
-            await Utils.DownloadFileAsync(url, packageName + ".zip");
-            Package.InstallPackage(packageName + ".zip");
-            // Remove package zip file if exists
-            if (File.Exists(packageName + ".zip"))
+
+            // Use a unique temporary file path for the download
+            string tempFilePath = Path.Combine(Path.GetTempPath(), $"{packageName}_{Guid.NewGuid()}.zip");
+            try
             {
-                File.Delete(packageName + ".zip");
+                await Utils.DownloadFileAsync(url, tempFilePath);
+                Package.InstallPackage(tempFilePath);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error during package download or installation: {ex.Message}");
+                throw;
+            }
+            finally
+            {
+                // Ensure cleanup of the temporary file
+                if (File.Exists(tempFilePath))
+                {
+                    try { File.Delete(tempFilePath); } catch { /* Ignore cleanup errors */ }
+                }
             }
         }
     }
