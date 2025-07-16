@@ -43,7 +43,7 @@ namespace OrangeLib.Net
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Error during package download or installation: {ex.Message}");
+                await Console.Error.WriteLineAsync($"Error during package download or installation: {ex.Message}");
                 throw;
             }
             finally
