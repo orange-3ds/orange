@@ -1,30 +1,122 @@
-﻿using OrangeLib;
-using OrangeLib.Info;
+﻿using OrangeLib.Info;
 
 namespace Orange
 {
+    public static class Commands
+    {
+        static public void Add(string[] args)
+        {
+            // Validate argument count
+            if (args.Length < 2)
+            {
+                Console.WriteLine("Usage: orange add <package path>");
+                return;
+            }
+
+            string packagePath = args[1];
+
+            // Check If file exists
+            if (!File.Exists(packagePath))
+            {
+                Console.WriteLine("Error: Package File does not exist.");
+                return;
+            }
+            else
+            {
+                try
+                {
+                    // load package cfg
+                    PackageInfo packageloader = new PackageInfo();
+                    packageloader.LoadCfg("package.cfg");
+                    OrangeLib.Package.InstallPackage(packagePath);
+                    // Add dependency to config
+                    packageloader.AddDependencyToCfg(packagePath, "package.cfg");
+                    Console.WriteLine("Sucessfully added the dependency.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error installing package: {ex.Message}");
+                    return;
+                }
+                Console.WriteLine($"Package {packagePath} installed successfully.");
+            }
+        }
+        static public void Build(string[] args)
+        {
+            // Placeholder for build command
+            Console.WriteLine("Build command is not yet implemented.");
+        }
+    }
     static class Program
     {
+        static readonly string _version = "v0.0.0 Beta";
+        static readonly string _help = @"Usage: orange [command] [options]
+Commands:
+    - upload
+    - init (app/package)
+    - sync
+    - build
+    - add (package path) ";
         static void Main(string[] args)
         {
             if (args.Length == 0 || args[0] == "--help")
             {
-                Utils.Messages.Help();
-                PackageInfo packageloader = new PackageInfo();
-                // The following code is for testing
-                var package = packageloader.LoadCfg("package.cfg");
-                Console.WriteLine($"Package Title: {package.Title}");
-                Console.WriteLine($"Package Description: {package.Description}");
-                Console.WriteLine($"Package Author: {package.Author}");
-                Console.WriteLine($"Package Readme Contents: {package.ReadmeContents}");
+                ShowHelp();
+            }
+            else if (args[0] == "add")
+            {
+                Commands.Add(args);
+            }
+            else if (args[0] == "build")
+            {
+                Commands.Build(args);
+            }
+            else if (args[0] == "upload")
+            {
+                Console.WriteLine("Upload command is not yet implemented.");
+            }
+            else if (args[0] == "init")
+            {
+                HandleInitCommand(args);
+            }
+            else if (args[0] == "sync")
+            {
+                Console.WriteLine("Sync command is not yet implemented.");
             }
             else if (args[0] == "--version" || args[0] == "-v")
             {
-                Utils.Messages.Version();
+                Console.WriteLine($"Orange Version: {_version}");
             }
             else
             {
                 Console.WriteLine("Unknown command. Use --help to view help information");
+            }
+        }
+
+        private static void ShowHelp()
+        {
+            Console.WriteLine(_help);
+        }
+
+        private static void HandleInitCommand(string[] args)
+        {
+            if (args.Length < 2)
+            {
+                Console.WriteLine("Usage: orange init <app/package>");
+                return;
+            }
+            string type = args[1];
+            if (type == "app")
+            {
+                Console.WriteLine("App initialization is not yet implemented.");
+            }
+            else if (type == "package")
+            {
+                Console.WriteLine("Package initialization is not yet implemented.");
+            }
+            else
+            {
+                Console.WriteLine("Unknown type. Use 'app' or 'package'.");
             }
         }
     }
