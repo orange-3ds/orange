@@ -43,7 +43,7 @@ namespace OrangeLib.Info
                     return "README path not provided";
                 if (!File.Exists(path))
                     return $"README file not found: {path}";
-                
+
                 return File.ReadAllText(path);
             }
             catch (Exception ex)
@@ -150,32 +150,32 @@ namespace OrangeLib.Info
         {
             if (string.IsNullOrWhiteSpace(filename))
                 throw new ArgumentException("Configuration filename cannot be null or empty.", nameof(filename));
-            
+
             // Check if file exists and if the file extension is .cfg
             if (!System.IO.File.Exists(filename) || System.IO.Path.GetExtension(filename).ToLower() != ".cfg")
             {
                 throw new System.IO.FileNotFoundException("Configuration file not found or invalid file type.", filename);
             }
-            
+
             try
             {
                 // load file
                 string filebuffer = File.ReadAllText(filename);
                 ConfigFile configFile = ConfigFile.Parse(filebuffer);
-                
+
                 // Get information from config file
                 Title = configFile.GetVariable("info", "Title") ?? Title;
-                Description = configFile.GetVariable("info", "Description")  ?? Description;
+                Description = configFile.GetVariable("info", "Description") ?? Description;
                 Author = configFile.GetVariable("info", "Author") ?? Author;
                 Dependencies = configFile.GetArray("dependencies");
                 string readmePath = configFile.GetVariable("info", "README") ?? ReadmeContents;
-                
+
                 // Resolve relative path to config file directory
                 if (!string.IsNullOrWhiteSpace(readmePath) && !System.IO.Path.IsPathRooted(readmePath))
                 {
                     string configDir = System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(filename)) ?? string.Empty;
                     readmePath = System.IO.Path.Combine(configDir, readmePath);
-                    
+
                     // Validate resolved path to prevent directory traversal
                     string fullConfigDir = Path.GetFullPath(configDir);
                     string fullReadmePath = Path.GetFullPath(readmePath);
@@ -185,11 +185,11 @@ namespace OrangeLib.Info
                         return GetInformation();
                     }
                 }
-                
+
                 ReadmeContents = System.IO.File.Exists(readmePath)
                     ? GetReadmeContents(readmePath)
                     : $"README file not found: {readmePath}";
-                
+
                 // Return information
                 return GetInformation();
             }

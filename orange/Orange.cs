@@ -41,6 +41,11 @@ namespace Orange
                 Console.WriteLine($"Package {packagePath} installed successfully.");
             }
         }
+        static public void Build(string[] args)
+        {
+            // Placeholder for build command
+            Console.WriteLine("Build command is not yet implemented.");
+        }
     }
     static class Program
     {
@@ -56,12 +61,27 @@ Commands:
         {
             if (args.Length == 0 || args[0] == "--help")
             {
-                // Write _help text
-                Console.WriteLine(_help);
+                ShowHelp();
             }
-            else if (args.Length > 0 && args[0] == "add")
+            else if (args[0] == "add")
             {
-                Commands.add(args);
+                Commands.Add(args);
+            }
+            else if (args[0] == "build")
+            {
+                Commands.Build(args);
+            }
+            else if (args[0] == "upload")
+            {
+                Console.WriteLine("Upload command is not yet implemented.");
+            }
+            else if (args[0] == "init")
+            {
+                HandleInitCommand(args);
+            }
+            else if (args[0] == "sync")
+            {
+                Console.WriteLine("Sync command is not yet implemented.");
             }
             else if (args[0] == "--version" || args[0] == "-v")
             {
@@ -70,6 +90,33 @@ Commands:
             else
             {
                 Console.WriteLine("Unknown command. Use --help to view help information");
+            }
+        }
+
+        private static void ShowHelp()
+        {
+            Console.WriteLine(_help);
+        }
+
+        private static void HandleInitCommand(string[] args)
+        {
+            if (args.Length < 2)
+            {
+                Console.WriteLine("Usage: orange init <app/package>");
+                return;
+            }
+            string type = args[1];
+            if (type == "app")
+            {
+                Console.WriteLine("App initialization is not yet implemented.");
+            }
+            else if (type == "package")
+            {
+                Console.WriteLine("Package initialization is not yet implemented.");
+            }
+            else
+            {
+                Console.WriteLine("Unknown type. Use 'app' or 'package'.");
             }
         }
     }

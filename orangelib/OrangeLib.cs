@@ -11,7 +11,22 @@ namespace OrangeLib
         public static bool IsMacOS() => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
         public static bool IsLinux() => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
 
-        public static readonly string PackageProviderDefault = "packages.orange.orbical.xyz";
+        public static async Task DownloadFileAsync(string fileUrl, string localFilePath)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                try
+                {
+                    byte[] fileBytes = await httpClient.GetByteArrayAsync(fileUrl);
+                    await File.WriteAllBytesAsync(localFilePath, fileBytes);
+                    Console.WriteLine($"File downloaded to {localFilePath}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error downloading file: {ex.Message}");
+                }
+            }
+        }
         public static string RunCommandSafe(string command)
         {
             try
