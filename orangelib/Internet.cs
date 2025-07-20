@@ -6,7 +6,9 @@ namespace OrangeLib.Net
 {
     public static class Internet
     {
-        private const string DefaultWebPath = "http://localhost:8080/";
+        private static readonly string DefaultWebPath = Environment.GetEnvironmentVariable("ENVIRONMENT") == "Production"
+            ? "https://example.com/" // Default production URL
+            : "https://localhost:8080/"; // Default development URL
         static string _webPath = DefaultWebPath;
 
         public static string GetWebPath()
@@ -47,7 +49,12 @@ namespace OrangeLib.Net
                         // If we can open, it's a valid ZIP
                     }
                 }
-                catch (Exception)
+                catch (System.IO.InvalidDataException)
+                {
+                    await Console.Error.WriteLineAsync($"Downloaded file is not a valid ZIP archive: {tempFilePath}").ConfigureAwait(false);
+                    return;
+                }
+                catch (System.IO.Compression.ZipFileFormatException)
                 {
                     await Console.Error.WriteLineAsync($"Downloaded file is not a valid ZIP archive: {tempFilePath}").ConfigureAwait(false);
                     return;
