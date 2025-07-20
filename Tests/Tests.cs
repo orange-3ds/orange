@@ -2,10 +2,7 @@
 
 namespace Tests
 {
-    public class Utils
-    {
-       
-    }
+    
     public class Info
     {
         [Fact]
