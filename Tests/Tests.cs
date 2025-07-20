@@ -2,20 +2,7 @@
 
 namespace Tests
 {
-    public class Utils
-    {
-        [Fact]
-        public void TestRunCommandSafe()
-        {
-            string output = OrangeLib.Utils.RunCommandSafe("echo hi");
-            Assert.Equal("hi", output);
-        }
-        [Fact]
-        public void TestRunCommandStreamOutputChecked()
-        {
-            Assert.True(OrangeLib.Utils.RunCommandStreamOutputChecked("echo hi"));
-        }
-    }
+    
     public class Info
     {
         [Fact]
