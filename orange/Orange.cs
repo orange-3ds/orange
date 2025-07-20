@@ -9,16 +9,16 @@ namespace Orange
             // Validate argument count
             if (args.Length < 2)
             {
-                Console.WriteLine("Usage: orange add <package path>");
+                Console.WriteLine("Usage: orange add <package>");
                 return;
             }
 
             string packagePath = args[1];
 
             // Check If file exists
-            if (!File.Exists(packagePath))
+            if (File.Exists(packagePath))
             {
-                Console.WriteLine("Error: Package File does not exist.");
+                Console.WriteLine("Error: package file local installing is not supporkted yet.");
                 return;
             }
             else
@@ -28,7 +28,7 @@ namespace Orange
                     // load package cfg
                     PackageInfo packageloader = new PackageInfo();
                     packageloader.LoadCfg("package.cfg");
-                    OrangeLib.Package.InstallPackage(packagePath);
+                    OrangeLib.Net.Internet.GetPackage(packagePath).GetAwaiter().GetResult();
                     // Add dependency to config
                     packageloader.AddDependencyToCfg(packagePath, "package.cfg");
                     Console.WriteLine("Sucessfully added the dependency.");
@@ -43,7 +43,7 @@ namespace Orange
         }
         static public void Build(string[] args)
         {
-            // Placeholder for build command
+            // TODO Make build command
             Console.WriteLine("Build command is not yet implemented.");
         }
     }

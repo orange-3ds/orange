@@ -265,8 +265,8 @@ namespace OrangeLib
             }
             if (File.Exists("Makefile"))
             {
-                bool successclean = Utils.RunCommandStreamOutputChecked("make clean");
-                bool successmake = Utils.RunCommandStreamOutputChecked("make");
+                bool successclean = CollinExecute.Shell.SystemCommand("make clean");
+                bool successmake = CollinExecute.Shell.SystemCommand("make");
                 if (!successclean || !successmake)
                 {
                     Console.Error.WriteLine("Build Failed.");

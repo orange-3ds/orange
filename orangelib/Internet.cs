@@ -6,7 +6,7 @@ namespace OrangeLib.Net
 {
     public static class Internet
     {
-        private const string DefaultWebPath = "https://orange.orbical.xyz/";
+        private const string DefaultWebPath = "http://localhost:8080/";
         static string _webPath = DefaultWebPath;
 
         public static string GetWebPath()
@@ -39,6 +39,19 @@ namespace OrangeLib.Net
             try
             {
                 await Utils.DownloadFileAsync(url, tempFilePath);
+                // Validate ZIP file before installing
+                try
+                {
+                    using (var zip = System.IO.Compression.ZipFile.OpenRead(tempFilePath))
+                    {
+                        // If we can open, it's a valid ZIP
+                    }
+                }
+                catch (Exception)
+                {
+                    await Console.Error.WriteLineAsync($"Downloaded file is not a valid ZIP archive: {tempFilePath}").ConfigureAwait(false);
+                    return;
+                }
                 Package.InstallPackage(tempFilePath);
             }
             catch (Exception ex)
