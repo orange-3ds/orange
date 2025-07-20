@@ -27,6 +27,7 @@ namespace OrangeLib
                 }
             }
         }
+        [Obsolete("This command is being depercated")]
         public static string RunCommandSafe(string command)
         {
             try
@@ -79,6 +80,7 @@ namespace OrangeLib
                 return string.Empty;
             }
         }
+        [Obsolete("This command is being depercated")]
         public static bool RunCommandStreamOutputChecked(string command)
         {
             try
@@ -139,7 +141,7 @@ namespace OrangeLib
                 return false;
             }
         }
-
+        [Obsolete("This command is being depercated")]
         public static void RunCommandStreamOutput(string command)
         {
             try
