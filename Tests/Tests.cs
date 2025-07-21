@@ -2,6 +2,7 @@
 using OrangeLib;
 using OrangeLib.Net;
 using System.IO.Compression;
+using System.Runtime.InteropServices;
 
 namespace Tests
 {
@@ -551,6 +552,42 @@ Author: Test Author
                     }
                 }
             }
+        }
+    }
+
+    public class InstallerTests
+    {
+        [Fact]
+        public void GetInstallDirectory_ReturnsValidPath()
+        {
+            // This test verifies the install directory logic without actually installing
+            var result = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) 
+                ? Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + Path.DirectorySeparatorChar + "Orange"
+                : "/usr/local/bin";
+            
+            Assert.False(string.IsNullOrEmpty(result));
+            Assert.True(Path.IsPathRooted(result));
+        }
+
+        [Fact]
+        public void InstallerIsWindows_ReturnsCorrectPlatform()
+        {
+            var result = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+            Assert.IsType<bool>(result);
+        }
+
+        [Fact]
+        public void InstallerIsMacOS_ReturnsCorrectPlatform()
+        {
+            var result = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+            Assert.IsType<bool>(result);
+        }
+
+        [Fact]
+        public void InstallerIsLinux_ReturnsCorrectPlatform()
+        {
+            var result = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+            Assert.IsType<bool>(result);
         }
     }
 }

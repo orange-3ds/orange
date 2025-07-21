@@ -1,7 +1,13 @@
 using System;
+using System.IO;
+using System.Net.Http;
 using System.Runtime.InteropServices;
+using System.Text.Json;
+using System.Threading.Tasks;
+using OrangeLib;
+// TODO: Uncomment when .NET 9.0 SDK is available:
+// using CollinExecute;
 
-//TODO: Make installer
 namespace Installer
 {
     static class Program
@@ -9,9 +15,456 @@ namespace Installer
         public static bool IsWindows() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         public static bool IsMacOS() => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
         public static bool IsLinux() => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+        
+        private const string OrangeName = "orange";
+        private const string Version = "0.1.0";
+
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
+            Console.WriteLine($"Orange Package Manager Installer v{Version}");
+            Console.WriteLine("==========================================");
+            
+            if (args.Length > 0 && (args[0] == "--help" || args[0] == "-h"))
+            {
+                ShowHelp();
+                return;
+            }
+            
+            if (args.Length > 0 && (args[0] == "--uninstall" || args[0] == "-u"))
+            {
+                UninstallOrange();
+                return;
+            }
+
+            InstallOrangeAsync().Wait();
+        }
+
+        static void ShowHelp()
+        {
+            Console.WriteLine("Usage: Installer [options]");
+            Console.WriteLine("Options:");
+            Console.WriteLine("  --help, -h        Show this help message");
+            Console.WriteLine("  --uninstall, -u   Uninstall Orange");
+            Console.WriteLine();
+            Console.WriteLine("Default behavior (no options): Install Orange");
+        }
+
+        static async Task InstallOrangeAsync()
+        {
+            try
+            {
+                Console.WriteLine("Starting Orange installation...");
+                
+                // Download Orange binary from GitHub releases
+                string orangeExePath = await DownloadOrangeBinaryAsync();
+                if (string.IsNullOrEmpty(orangeExePath))
+                {
+                    Console.Error.WriteLine("Error: Failed to download Orange binary.");
+                    Environment.Exit(1);
+                    return;
+                }
+
+                Console.WriteLine($"Downloaded Orange binary: {orangeExePath}");
+
+                // Get installation directory
+                string installDir = GetInstallDirectory();
+                Console.WriteLine($"Installing to: {installDir}");
+
+                // Create installation directory if it doesn't exist
+                if (!Directory.Exists(installDir))
+                {
+                    Directory.CreateDirectory(installDir);
+                    Console.WriteLine("Created installation directory.");
+                }
+
+                // Copy Orange executable to installation directory
+                string targetExePath = Path.Combine(installDir, Path.GetFileName(orangeExePath));
+                File.Copy(orangeExePath, targetExePath, true);
+                Console.WriteLine("Copied Orange executable.");
+
+                // Make executable on Unix systems
+                if (!IsWindows())
+                {
+                    MakeExecutable(targetExePath);
+                }
+
+                // Add to PATH
+                AddToPath(installDir);
+
+                // Clean up downloaded file
+                try
+                {
+                    File.Delete(orangeExePath);
+                }
+                catch
+                {
+                    // Ignore cleanup errors
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("✓ Orange has been installed successfully!");
+                Console.WriteLine($"✓ Installed to: {installDir}");
+                Console.WriteLine("✓ Added to system PATH");
+                Console.WriteLine();
+                Console.WriteLine("You can now use 'orange' command from anywhere in your terminal.");
+                Console.WriteLine("Try: orange --help");
+                
+                if (!IsWindows())
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("Note: You may need to restart your terminal or run 'source ~/.bashrc' (Linux) or 'source ~/.zshrc' (macOS) for the PATH changes to take effect.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Installation failed: {ex.Message}");
+                Environment.Exit(1);
+            }
+        }
+
+        static void UninstallOrange()
+        {
+            try
+            {
+                Console.WriteLine("Starting Orange uninstallation...");
+                
+                string installDir = GetInstallDirectory();
+                
+                if (Directory.Exists(installDir))
+                {
+                    // Remove Orange files
+                    string orangeExePath = Path.Combine(installDir, IsWindows() ? "orange.exe" : "orange");
+                    if (File.Exists(orangeExePath))
+                    {
+                        File.Delete(orangeExePath);
+                        Console.WriteLine("Removed Orange executable.");
+                    }
+
+                    // Try to remove directory if empty
+                    try
+                    {
+                        if (Directory.GetFiles(installDir).Length == 0 && Directory.GetDirectories(installDir).Length == 0)
+                        {
+                            Directory.Delete(installDir);
+                            Console.WriteLine("Removed installation directory.");
+                        }
+                    }
+                    catch
+                    {
+                        Console.WriteLine("Installation directory not empty, leaving it in place.");
+                    }
+                }
+
+                // Remove from PATH
+                RemoveFromPath(installDir);
+
+                Console.WriteLine();
+                Console.WriteLine("✓ Orange has been uninstalled successfully!");
+                
+                if (!IsWindows())
+                {
+                    Console.WriteLine("Note: You may need to restart your terminal for the PATH changes to take effect.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Uninstallation failed: {ex.Message}");
+                Environment.Exit(1);
+            }
+        }
+
+        static async Task<string> DownloadOrangeBinaryAsync()
+        {
+            try
+            {
+                Console.WriteLine("Fetching latest release information from GitHub...");
+                
+                using (var httpClient = new HttpClient())
+                {
+                    httpClient.DefaultRequestHeaders.Add("User-Agent", "Orange-Installer/1.0");
+                    
+                    // Get latest release info
+                    string apiUrl = "https://api.github.com/repos/orange-3ds/orange/releases/latest";
+                    string responseJson = await httpClient.GetStringAsync(apiUrl);
+                    
+                    var releaseInfo = JsonSerializer.Deserialize<JsonElement>(responseJson);
+                    
+                    if (!releaseInfo.TryGetProperty("assets", out var assets))
+                    {
+                        throw new Exception("No assets found in release");
+                    }
+                    
+                    // Determine the correct binary name for the platform
+                    string binaryName = GetPlatformBinaryName();
+                    Console.WriteLine($"Looking for binary: {binaryName}");
+                    
+                    // Find the correct asset
+                    string downloadUrl = "";
+                    foreach (var asset in assets.EnumerateArray())
+                    {
+                        if (asset.TryGetProperty("name", out var nameElement) && 
+                            asset.TryGetProperty("browser_download_url", out var urlElement))
+                        {
+                            string name = nameElement.GetString() ?? "";
+                            if (name.Equals(binaryName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                downloadUrl = urlElement.GetString() ?? "";
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (string.IsNullOrEmpty(downloadUrl))
+                    {
+                        throw new Exception($"Binary '{binaryName}' not found in release assets");
+                    }
+                    
+                    Console.WriteLine($"Downloading from: {downloadUrl}");
+                    
+                    // Download the binary
+                    byte[] binaryData = await httpClient.GetByteArrayAsync(downloadUrl);
+                    
+                    // Save to temporary file
+                    string tempPath = Path.Combine(Path.GetTempPath(), binaryName);
+                    await File.WriteAllBytesAsync(tempPath, binaryData);
+                    
+                    Console.WriteLine($"Downloaded binary to: {tempPath}");
+                    return tempPath;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Failed to download Orange binary: {ex.Message}");
+                return string.Empty;
+            }
+        }
+        
+        static string GetPlatformBinaryName()
+        {
+            if (IsWindows())
+            {
+                return "orange.exe";
+            }
+            else if (IsMacOS())
+            {
+                return "orange-macos";
+            }
+            else if (IsLinux())
+            {
+                return "orange-linux";
+            }
+            else
+            {
+                return "orange";
+            }
+        }
+
+        static string GetInstallDirectory()
+        {
+            if (IsWindows())
+            {
+                string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                return Path.Combine(programFiles, "Orange");
+            }
+            else
+            {
+                return "/usr/local/bin";
+            }
+        }
+
+        static void MakeExecutable(string filePath)
+        {
+            // Make file executable on Unix systems using CollinExecute when available
+            // For now, falling back to Utils.ExecuteShellCommand
+            string chmodCommand = $"chmod +x \"{filePath}\"";
+            
+            // TODO: When .NET 9.0 SDK is available, replace with CollinExecute:
+            // var executor = new CommandExecutor();
+            // var result = executor.Execute("chmod", new[] { "+x", filePath });
+            // bool success = result.ExitCode == 0;
+            
+            bool success = Utils.ExecuteShellCommand(chmodCommand);
+            if (success)
+            {
+                Console.WriteLine("Made Orange executable.");
+            }
+            else
+            {
+                Console.WriteLine("Warning: Could not make Orange executable. You may need to run 'chmod +x' manually.");
+            }
+        }
+
+        static void AddToPath(string directory)
+        {
+            if (IsWindows())
+            {
+                AddToWindowsPath(directory);
+            }
+            else
+            {
+                AddToUnixPath(directory);
+            }
+        }
+
+        static void AddToWindowsPath(string directory)
+        {
+            try
+            {
+                // Use PowerShell to add to user PATH with CollinExecute when available
+                string command = $"powershell -Command \"$env:PATH += ';{directory}'; [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'User')\"";
+                
+                // TODO: When .NET 9.0 SDK is available, replace with CollinExecute:
+                // var executor = new CommandExecutor();
+                // var result = executor.Execute("powershell", new[] { "-Command", $"$env:PATH += ';{directory}'; [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'User')" });
+                // bool success = result.ExitCode == 0;
+                
+                bool success = Utils.ExecuteShellCommand(command);
+                if (success)
+                {
+                    Console.WriteLine("Added to Windows PATH.");
+                }
+                else
+                {
+                    Console.WriteLine("Warning: Could not automatically add to PATH. Please add manually.");
+                    Console.WriteLine($"Add this directory to your PATH: {directory}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Warning: Could not add to PATH: {ex.Message}");
+                Console.WriteLine($"Please manually add this directory to your PATH: {directory}");
+            }
+        }
+
+        static void AddToUnixPath(string directory)
+        {
+            try
+            {
+                string homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                
+                // Determine shell config file
+                string[] shellConfigs = { ".zshrc", ".bashrc", ".bash_profile", ".profile" };
+                string configFile = "";
+                
+                foreach (string config in shellConfigs)
+                {
+                    string configPath = Path.Combine(homeDir, config);
+                    if (File.Exists(configPath))
+                    {
+                        configFile = configPath;
+                        break;
+                    }
+                }
+
+                // If no config file exists, create .bashrc
+                if (string.IsNullOrEmpty(configFile))
+                {
+                    configFile = Path.Combine(homeDir, ".bashrc");
+                }
+
+                // Add PATH export to shell config
+                string pathLine = $"export PATH=\"$PATH:{directory}\"";
+                
+                // Check if already added
+                if (File.Exists(configFile))
+                {
+                    string content = File.ReadAllText(configFile);
+                    if (content.Contains(pathLine) || content.Contains(directory))
+                    {
+                        Console.WriteLine("PATH already contains Orange directory.");
+                        return;
+                    }
+                }
+
+                // Append to config file
+                using (StreamWriter writer = File.AppendText(configFile))
+                {
+                    writer.WriteLine();
+                    writer.WriteLine("# Added by Orange installer");
+                    writer.WriteLine(pathLine);
+                }
+                
+                Console.WriteLine($"Added to PATH via {Path.GetFileName(configFile)}.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Warning: Could not add to PATH: {ex.Message}");
+                Console.WriteLine($"Please manually add this directory to your PATH: {directory}");
+            }
+        }
+
+        static void RemoveFromPath(string directory)
+        {
+            if (IsWindows())
+            {
+                RemoveFromWindowsPath(directory);
+            }
+            else
+            {
+                RemoveFromUnixPath(directory);
+            }
+        }
+
+        static void RemoveFromWindowsPath(string directory)
+        {
+            try
+            {
+                // Use PowerShell to remove from user PATH with CollinExecute when available
+                string command = $"powershell -Command \"$path = [Environment]::GetEnvironmentVariable('PATH', 'User'); $newPath = $path -replace [regex]::Escape(';{directory}'), ''; [Environment]::SetEnvironmentVariable('PATH', $newPath, 'User')\"";
+                
+                // TODO: When .NET 9.0 SDK is available, replace with CollinExecute:
+                // var executor = new CommandExecutor();
+                // var result = executor.Execute("powershell", new[] { "-Command", $"$path = [Environment]::GetEnvironmentVariable('PATH', 'User'); $newPath = $path -replace [regex]::Escape(';{directory}'), ''; [Environment]::SetEnvironmentVariable('PATH', $newPath, 'User')" });
+                // bool success = result.ExitCode == 0;
+                
+                bool success = Utils.ExecuteShellCommand(command);
+                if (success)
+                {
+                    Console.WriteLine("Removed from Windows PATH.");
+                }
+                else
+                {
+                    Console.WriteLine("Warning: Could not automatically remove from PATH. Please remove manually.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Warning: Could not remove from PATH: {ex.Message}");
+            }
+        }
+
+        static void RemoveFromUnixPath(string directory)
+        {
+            try
+            {
+                string homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                string[] shellConfigs = { ".zshrc", ".bashrc", ".bash_profile", ".profile" };
+
+                foreach (string config in shellConfigs)
+                {
+                    string configPath = Path.Combine(homeDir, config);
+                    if (File.Exists(configPath))
+                    {
+                        string content = File.ReadAllText(configPath);
+                        string pathLine = $"export PATH=\"$PATH:{directory}\"";
+                        
+                        if (content.Contains(pathLine))
+                        {
+                            // Remove the line and the comment
+                            content = content.Replace("# Added by Orange installer\n", "");
+                            content = content.Replace(pathLine + "\n", "");
+                            content = content.Replace(pathLine, "");
+                            
+                            File.WriteAllText(configPath, content);
+                            Console.WriteLine($"Removed from PATH in {Path.GetFileName(configPath)}.");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Warning: Could not remove from PATH: {ex.Message}");
+            }
         }
     }
 }
