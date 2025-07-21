@@ -18,6 +18,7 @@
     <ProjectReference Include="..\configlibnet\configlibnet.csproj" />
     <ProjectReference Include="..\orangelib\orangelib.csproj" />
     <ProjectReference Include="..\orange\orange.csproj" />
+    <ProjectReference Include="..\Installer\Installer.csproj" />
   </ItemGroup>
 
   <ItemGroup>
