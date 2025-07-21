@@ -11,6 +11,34 @@ namespace OrangeLib
         public static bool IsMacOS() => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
         public static bool IsLinux() => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
 
+        public static bool ExecuteShellCommand(string command)
+        {
+            try
+            {
+                var process = new Process();
+                if (IsWindows())
+                {
+                    process.StartInfo.FileName = "cmd.exe";
+                    process.StartInfo.Arguments = $"/c {command}";
+                }
+                else
+                {
+                    process.StartInfo.FileName = "/bin/bash";
+                    process.StartInfo.Arguments = $"-c \"{command}\"";
+                }
+                
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.CreateNoWindow = true;
+                process.Start();
+                process.WaitForExit();
+                return process.ExitCode == 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public static async Task DownloadFileAsync(string fileUrl, string localFilePath)
         {
             using (var httpClient = new HttpClient())
@@ -102,8 +130,8 @@ namespace OrangeLib
             }
             if (File.Exists("Makefile"))
             {
-                bool successclean = CollinExecute.Shell.SystemCommand("make clean");
-                bool successmake = CollinExecute.Shell.SystemCommand("make");
+                bool successclean = Utils.ExecuteShellCommand("make clean");
+                bool successmake = Utils.ExecuteShellCommand("make");
                 if (!successclean || !successmake)
                 {
                     Console.Error.WriteLine("Build Failed.");
