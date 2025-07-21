@@ -39,7 +39,7 @@ Commands:
             }
             else if (args[0] == "sync")
             {
-                Console.WriteLine("Sync command is not yet implemented.");
+                Sync(args);
             }
             else if (args[0] == "--version" || args[0] == "-v")
             {
@@ -98,8 +98,15 @@ Commands:
         }
         static public void Sync(string[] args)
         {
-            // TODO Make Sync command
-            Console.WriteLine("Sync command is not yet implemented.");
+            var packageinfo = new PackageInfo();
+            Information info = packageinfo.LoadCfg("package.cfg");
+            // Split dependencies by whitespace if needed
+            var dependencies = info.Dependencies?.Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+            foreach (var dep in dependencies)
+            {
+                OrangeLib.Net.Internet.GetPackage(dep).GetAwaiter().GetResult();
+                Console.WriteLine($"Installed {dep}");
+            }
         }
         private static void ShowHelp()
         {

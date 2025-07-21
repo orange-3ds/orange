@@ -19,7 +19,6 @@ namespace OrangeLib
                 {
                     byte[] fileBytes = await httpClient.GetByteArrayAsync(fileUrl);
                     await File.WriteAllBytesAsync(localFilePath, fileBytes);
-                    Console.WriteLine($"File downloaded to {localFilePath}");
                 }
                 catch (Exception ex)
                 {
