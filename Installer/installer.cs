@@ -5,8 +5,6 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading.Tasks;
 using OrangeLib;
-// TODO: Uncomment when .NET 9.0 SDK is available:
-// using CollinExecute;
 
 namespace Installer
 {
@@ -16,7 +14,7 @@ namespace Installer
         public static bool IsMacOS() => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
         public static bool IsLinux() => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
         
-        private const string OrangeName = "orange";
+        
         private const string Version = "0.1.0";
 
         static void Main(string[] args)
@@ -59,7 +57,7 @@ namespace Installer
                 string orangeExePath = await DownloadOrangeBinaryAsync();
                 if (string.IsNullOrEmpty(orangeExePath))
                 {
-                    Console.Error.WriteLine("Error: Failed to download Orange binary.");
+                    await Console.Error.WriteLineAsync("Error: Failed to download Orange binary.");
                     Environment.Exit(1);
                     return;
                 }
@@ -117,7 +115,7 @@ namespace Installer
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Installation failed: {ex.Message}");
+                await Console.Error.WriteLineAsync($"Installation failed: {ex.Message}");
                 Environment.Exit(1);
             }
         }
@@ -234,7 +232,7 @@ namespace Installer
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Failed to download Orange binary: {ex.Message}");
+                await Console.Error.WriteLineAsync($"Failed to download Orange binary: {ex.Message}");
                 return string.Empty;
             }
         }
@@ -278,10 +276,7 @@ namespace Installer
             // For now, falling back to Utils.ExecuteShellCommand
             string chmodCommand = $"chmod +x \"{filePath}\"";
             
-            // TODO: When .NET 9.0 SDK is available, replace with CollinExecute:
-            // var executor = new CommandExecutor();
-            // var result = executor.Execute("chmod", new[] { "+x", filePath });
-            // bool success = result.ExitCode == 0;
+    
             
             bool success = Utils.ExecuteShellCommand(chmodCommand);
             if (success)
@@ -312,11 +307,7 @@ namespace Installer
             {
                 // Use PowerShell to add to user PATH with CollinExecute when available
                 string command = $"powershell -Command \"$env:PATH += ';{directory}'; [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'User')\"";
-                
-                // TODO: When .NET 9.0 SDK is available, replace with CollinExecute:
-                // var executor = new CommandExecutor();
-                // var result = executor.Execute("powershell", new[] { "-Command", $"$env:PATH += ';{directory}'; [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'User')" });
-                // bool success = result.ExitCode == 0;
+  
                 
                 bool success = Utils.ExecuteShellCommand(command);
                 if (success)
@@ -412,10 +403,6 @@ namespace Installer
                 // Use PowerShell to remove from user PATH with CollinExecute when available
                 string command = $"powershell -Command \"$path = [Environment]::GetEnvironmentVariable('PATH', 'User'); $newPath = $path -replace [regex]::Escape(';{directory}'), ''; [Environment]::SetEnvironmentVariable('PATH', $newPath, 'User')\"";
                 
-                // TODO: When .NET 9.0 SDK is available, replace with CollinExecute:
-                // var executor = new CommandExecutor();
-                // var result = executor.Execute("powershell", new[] { "-Command", $"$path = [Environment]::GetEnvironmentVariable('PATH', 'User'); $newPath = $path -replace [regex]::Escape(';{directory}'), ''; [Environment]::SetEnvironmentVariable('PATH', $newPath, 'User')" });
-                // bool success = result.ExitCode == 0;
                 
                 bool success = Utils.ExecuteShellCommand(command);
                 if (success)

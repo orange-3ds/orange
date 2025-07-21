@@ -13,7 +13,7 @@ Commands:
     - sync
     - build
     - add (package path) ";
-        static readonly string _version = "v0.0.0 Beta";
+        static readonly string _version = "v1.0.0";
         static readonly string _help = V;
         static void Main(string[] args)
         {
@@ -98,9 +98,10 @@ Commands:
         }
         static public void Sync(string[] args)
         {
+            // Ensure production URL is used for package downloads
+            OrangeLib.Net.Internet.SetWebPath("https://orange.collinsoftware.dev/");
             var packageinfo = new PackageInfo();
             Information info = packageinfo.LoadCfg("package.cfg");
-            // Split dependencies by whitespace if needed
             var dependencies = info.Dependencies?.Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
             foreach (var dep in dependencies)
             {

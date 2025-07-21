@@ -19,8 +19,19 @@ Devkitpro package manager.
 
 ## Status
 
-Project status: **In Development.**
+Project status: **First version about to be released!**
 ## Acknowledgements
 
  - [Devkitpro](https://github.com/devkitpro)
+
+## How to create a package
+
+Use the following command to create a package:
+```bash
+orange init package
+```
+
+Then send an email to [orange@collinsoftware.dev](mailto:orange@collinsoftware.dev) and we will review it and publish it.
+
+
 
