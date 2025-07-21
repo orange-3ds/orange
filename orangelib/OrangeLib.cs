@@ -72,29 +72,6 @@ namespace OrangeLib
                 File.Copy(filePath, newFilePath, true); // overwrite if exists
             }
         }
-
-        public static bool ExecuteCommand(string command, string arguments)
-        {
-            try
-            {
-                using (Process process = new Process())
-                {
-                    process.StartInfo.FileName = command;
-                    process.StartInfo.Arguments = arguments;
-                    process.StartInfo.UseShellExecute = false;
-                    process.StartInfo.RedirectStandardOutput = true;
-                    process.StartInfo.RedirectStandardError = true;
-                    process.Start();
-                    process.WaitForExit();
-                    return process.ExitCode == 0;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error executing command '{command} {arguments}': {ex.Message}");
-                return false;
-            }
-        }
     }
     // TODO: Write logic
     static public class Package
@@ -125,8 +102,8 @@ namespace OrangeLib
             }
             if (File.Exists("Makefile"))
             {
-                bool successclean = Utils.ExecuteCommand("make", "clean");
-                bool successmake = Utils.ExecuteCommand("make", "");
+                bool successclean = CollinExecute.Shell.SystemCommand("make clean");
+                bool successmake = CollinExecute.Shell.SystemCommand("make");
                 if (!successclean || !successmake)
                 {
                     Console.Error.WriteLine("Build Failed.");
