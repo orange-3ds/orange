@@ -19,7 +19,6 @@ namespace OrangeLib
                 {
                     byte[] fileBytes = await httpClient.GetByteArrayAsync(fileUrl);
                     await File.WriteAllBytesAsync(localFilePath, fileBytes);
-                    Console.WriteLine($"File downloaded to {localFilePath}");
                 }
                 catch (Exception ex)
                 {
@@ -87,9 +86,19 @@ namespace OrangeLib
             {
                 File.Delete("package.zip");
             }
+            // Before deleting, ensure all files and subdirectories are not read-only
             if (Directory.Exists("package"))
             {
-                Directory.Delete("package", true);
+                try
+                {
+                    RemoveReadOnlyAttributesRecursively("package");
+                    Directory.Delete("package", true);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"Failed to delete 'package' directory: {ex.Message}");
+                    return;
+                }
             }
             if (File.Exists("Makefile"))
             {
@@ -120,6 +129,34 @@ namespace OrangeLib
             }
             Utils.CreateZip("package", "package.zip");
         }
+
+        // Helper to remove read-only attributes recursively
+        private static void RemoveReadOnlyAttributesRecursively(string directory)
+        {
+            foreach (var file in Directory.GetFiles(directory, "*", SearchOption.AllDirectories))
+            {
+                var attributes = File.GetAttributes(file);
+                if ((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+                {
+                    File.SetAttributes(file, attributes & ~FileAttributes.ReadOnly);
+                }
+            }
+            foreach (var dir in Directory.GetDirectories(directory, "*", SearchOption.AllDirectories))
+            {
+                var attributes = File.GetAttributes(dir);
+                if ((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+                {
+                    File.SetAttributes(dir, attributes & ~FileAttributes.ReadOnly);
+                }
+            }
+            // Remove read-only from the root directory itself
+            var rootAttributes = File.GetAttributes(directory);
+            if ((rootAttributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+            {
+                File.SetAttributes(directory, rootAttributes & ~FileAttributes.ReadOnly);
+            }
+        }
+
         public static void InstallPackage(string packageZip)
         {
             string dirBeforeTemp = Directory.GetCurrentDirectory();
