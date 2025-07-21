@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
@@ -16,8 +16,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\configlibnet\configlibnet.csproj" />
-    <ProjectReference Include="..\orangelib\OrangeLib.csproj" />
-    <ProjectReference Include="..\orange\Orange.csproj" />
+    <ProjectReference Include="..\orangelib\orangelib.csproj" />
+    <ProjectReference Include="..\orange\orange.csproj" />
   </ItemGroup>
 
   <ItemGroup>
