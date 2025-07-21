@@ -64,7 +64,7 @@ Commands:
             // Check If file exists
             if (File.Exists(packagePath))
             {
-                Console.WriteLine("Error: package file local installing is not supporkted yet.");
+                Console.WriteLine("Error: package file local installing is not supported yet.");
                 return;
             }
             else
