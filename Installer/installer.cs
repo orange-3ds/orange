@@ -1,6 +1,9 @@
 using System;
 using System.IO;
+using System.Net.Http;
 using System.Runtime.InteropServices;
+using System.Text.Json;
+using System.Threading.Tasks;
 using OrangeLib;
 // TODO: Uncomment when .NET 9.0 SDK is available:
 // using CollinExecute;
@@ -33,7 +36,7 @@ namespace Installer
                 return;
             }
 
-            InstallOrange();
+            InstallOrangeAsync().Wait();
         }
 
         static void ShowHelp()
@@ -46,31 +49,22 @@ namespace Installer
             Console.WriteLine("Default behavior (no options): Install Orange");
         }
 
-        static void InstallOrange()
+        static async Task InstallOrangeAsync()
         {
             try
             {
                 Console.WriteLine("Starting Orange installation...");
                 
-                // Get current executable directory
-                string? currentDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-                if (string.IsNullOrEmpty(currentDir))
-                {
-                    Console.Error.WriteLine("Error: Could not determine current directory.");
-                    Environment.Exit(1);
-                    return;
-                }
-
-                // Find the Orange executable
-                string orangeExePath = FindOrangeExecutable(currentDir);
+                // Download Orange binary from GitHub releases
+                string orangeExePath = await DownloadOrangeBinaryAsync();
                 if (string.IsNullOrEmpty(orangeExePath))
                 {
-                    Console.Error.WriteLine("Error: Orange executable not found. Please ensure orange.exe (Windows) or orange binary is available.");
+                    Console.Error.WriteLine("Error: Failed to download Orange binary.");
                     Environment.Exit(1);
                     return;
                 }
 
-                Console.WriteLine($"Found Orange executable: {orangeExePath}");
+                Console.WriteLine($"Downloaded Orange binary: {orangeExePath}");
 
                 // Get installation directory
                 string installDir = GetInstallDirectory();
@@ -88,9 +82,6 @@ namespace Installer
                 File.Copy(orangeExePath, targetExePath, true);
                 Console.WriteLine("Copied Orange executable.");
 
-                // Copy dependencies if they exist
-                CopyDependencies(currentDir, installDir);
-
                 // Make executable on Unix systems
                 if (!IsWindows())
                 {
@@ -99,6 +90,16 @@ namespace Installer
 
                 // Add to PATH
                 AddToPath(installDir);
+
+                // Clean up downloaded file
+                try
+                {
+                    File.Delete(orangeExePath);
+                }
+                catch
+                {
+                    // Ignore cleanup errors
+                }
 
                 Console.WriteLine();
                 Console.WriteLine("✓ Orange has been installed successfully!");
@@ -139,9 +140,6 @@ namespace Installer
                         Console.WriteLine("Removed Orange executable.");
                     }
 
-                    // Remove dependencies
-                    RemoveDependencies(installDir);
-
                     // Try to remove directory if empty
                     try
                     {
@@ -175,26 +173,90 @@ namespace Installer
             }
         }
 
-        static string FindOrangeExecutable(string currentDir)
+        static async Task<string> DownloadOrangeBinaryAsync()
         {
-            string[] possiblePaths = {
-                Path.Combine(currentDir, "..", "orange", "bin", "Debug", "net9.0", IsWindows() ? "orange.exe" : "orange"),
-                Path.Combine(currentDir, "..", "orange", "bin", "Release", "net9.0", IsWindows() ? "orange.exe" : "orange"),
-                Path.Combine(currentDir, "..", "orange", "bin", "Debug", "net8.0", IsWindows() ? "orange.exe" : "orange"),
-                Path.Combine(currentDir, "..", "orange", "bin", "Release", "net8.0", IsWindows() ? "orange.exe" : "orange"),
-                Path.Combine(currentDir, IsWindows() ? "orange.exe" : "orange"),
-                Path.Combine(currentDir, "..", IsWindows() ? "orange.exe" : "orange")
-            };
-
-            foreach (string path in possiblePaths)
+            try
             {
-                if (File.Exists(path))
+                Console.WriteLine("Fetching latest release information from GitHub...");
+                
+                using (var httpClient = new HttpClient())
                 {
-                    return path;
+                    httpClient.DefaultRequestHeaders.Add("User-Agent", "Orange-Installer/1.0");
+                    
+                    // Get latest release info
+                    string apiUrl = "https://api.github.com/repos/orange-3ds/orange/releases/latest";
+                    string responseJson = await httpClient.GetStringAsync(apiUrl);
+                    
+                    var releaseInfo = JsonSerializer.Deserialize<JsonElement>(responseJson);
+                    
+                    if (!releaseInfo.TryGetProperty("assets", out var assets))
+                    {
+                        throw new Exception("No assets found in release");
+                    }
+                    
+                    // Determine the correct binary name for the platform
+                    string binaryName = GetPlatformBinaryName();
+                    Console.WriteLine($"Looking for binary: {binaryName}");
+                    
+                    // Find the correct asset
+                    string downloadUrl = "";
+                    foreach (var asset in assets.EnumerateArray())
+                    {
+                        if (asset.TryGetProperty("name", out var nameElement) && 
+                            asset.TryGetProperty("browser_download_url", out var urlElement))
+                        {
+                            string name = nameElement.GetString() ?? "";
+                            if (name.Equals(binaryName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                downloadUrl = urlElement.GetString() ?? "";
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (string.IsNullOrEmpty(downloadUrl))
+                    {
+                        throw new Exception($"Binary '{binaryName}' not found in release assets");
+                    }
+                    
+                    Console.WriteLine($"Downloading from: {downloadUrl}");
+                    
+                    // Download the binary
+                    byte[] binaryData = await httpClient.GetByteArrayAsync(downloadUrl);
+                    
+                    // Save to temporary file
+                    string tempPath = Path.Combine(Path.GetTempPath(), binaryName);
+                    await File.WriteAllBytesAsync(tempPath, binaryData);
+                    
+                    Console.WriteLine($"Downloaded binary to: {tempPath}");
+                    return tempPath;
                 }
             }
-
-            return string.Empty;
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Failed to download Orange binary: {ex.Message}");
+                return string.Empty;
+            }
+        }
+        
+        static string GetPlatformBinaryName()
+        {
+            if (IsWindows())
+            {
+                return "orange.exe";
+            }
+            else if (IsMacOS())
+            {
+                return "orange-macos";
+            }
+            else if (IsLinux())
+            {
+                return "orange-linux";
+            }
+            else
+            {
+                return "orange";
+            }
         }
 
         static string GetInstallDirectory()
@@ -207,70 +269,6 @@ namespace Installer
             else
             {
                 return "/usr/local/bin";
-            }
-        }
-
-        static void CopyDependencies(string sourceDir, string targetDir)
-        {
-            // Copy .dll files on Windows, .so files on Linux, .dylib files on macOS
-            string[] extensions = IsWindows() ? new[] { "*.dll" } : 
-                                 IsLinux() ? new[] { "*.so", "*.so.*" } : 
-                                 new[] { "*.dylib" };
-
-            foreach (string extension in extensions)
-            {
-                string[] files = Directory.GetFiles(sourceDir, extension);
-                foreach (string file in files)
-                {
-                    string fileName = Path.GetFileName(file);
-                    if (!fileName.StartsWith("orange")) // Don't copy the main executable again
-                    {
-                        string targetFile = Path.Combine(targetDir, fileName);
-                        File.Copy(file, targetFile, true);
-                        Console.WriteLine($"Copied dependency: {fileName}");
-                    }
-                }
-            }
-
-            // Copy related directories if they exist
-            string[] dirsToCheck = { "runtimes", "refs" };
-            foreach (string dirName in dirsToCheck)
-            {
-                string sourceSubDir = Path.Combine(sourceDir, dirName);
-                if (Directory.Exists(sourceSubDir))
-                {
-                    string targetSubDir = Path.Combine(targetDir, dirName);
-                    Utils.CopyDirectoryRecursively(sourceSubDir, targetSubDir);
-                    Console.WriteLine($"Copied directory: {dirName}");
-                }
-            }
-        }
-
-        static void RemoveDependencies(string installDir)
-        {
-            // Remove .dll files on Windows, .so files on Linux, .dylib files on macOS
-            string[] extensions = IsWindows() ? new[] { "*.dll" } : 
-                                 IsLinux() ? new[] { "*.so", "*.so.*" } : 
-                                 new[] { "*.dylib" };
-
-            foreach (string extension in extensions)
-            {
-                string[] files = Directory.GetFiles(installDir, extension);
-                foreach (string file in files)
-                {
-                    File.Delete(file);
-                }
-            }
-
-            // Remove related directories
-            string[] dirsToRemove = { "runtimes", "refs" };
-            foreach (string dirName in dirsToRemove)
-            {
-                string dirPath = Path.Combine(installDir, dirName);
-                if (Directory.Exists(dirPath))
-                {
-                    Directory.Delete(dirPath, true);
-                }
             }
         }
 
