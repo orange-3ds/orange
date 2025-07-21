@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using OrangeLib;
+// TODO: Uncomment when .NET 9.0 SDK is available:
+// using CollinExecute;
 
 namespace Installer
 {
@@ -176,6 +178,8 @@ namespace Installer
         static string FindOrangeExecutable(string currentDir)
         {
             string[] possiblePaths = {
+                Path.Combine(currentDir, "..", "orange", "bin", "Debug", "net9.0", IsWindows() ? "orange.exe" : "orange"),
+                Path.Combine(currentDir, "..", "orange", "bin", "Release", "net9.0", IsWindows() ? "orange.exe" : "orange"),
                 Path.Combine(currentDir, "..", "orange", "bin", "Debug", "net8.0", IsWindows() ? "orange.exe" : "orange"),
                 Path.Combine(currentDir, "..", "orange", "bin", "Release", "net8.0", IsWindows() ? "orange.exe" : "orange"),
                 Path.Combine(currentDir, IsWindows() ? "orange.exe" : "orange"),
@@ -272,8 +276,15 @@ namespace Installer
 
         static void MakeExecutable(string filePath)
         {
-            // Use chmod to make file executable on Unix systems
+            // Make file executable on Unix systems using CollinExecute when available
+            // For now, falling back to Utils.ExecuteShellCommand
             string chmodCommand = $"chmod +x \"{filePath}\"";
+            
+            // TODO: When .NET 9.0 SDK is available, replace with CollinExecute:
+            // var executor = new CommandExecutor();
+            // var result = executor.Execute("chmod", new[] { "+x", filePath });
+            // bool success = result.ExitCode == 0;
+            
             bool success = Utils.ExecuteShellCommand(chmodCommand);
             if (success)
             {
@@ -301,8 +312,14 @@ namespace Installer
         {
             try
             {
-                // Use PowerShell to add to user PATH
+                // Use PowerShell to add to user PATH with CollinExecute when available
                 string command = $"powershell -Command \"$env:PATH += ';{directory}'; [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'User')\"";
+                
+                // TODO: When .NET 9.0 SDK is available, replace with CollinExecute:
+                // var executor = new CommandExecutor();
+                // var result = executor.Execute("powershell", new[] { "-Command", $"$env:PATH += ';{directory}'; [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'User')" });
+                // bool success = result.ExitCode == 0;
+                
                 bool success = Utils.ExecuteShellCommand(command);
                 if (success)
                 {
@@ -394,8 +411,14 @@ namespace Installer
         {
             try
             {
-                // Use PowerShell to remove from user PATH
+                // Use PowerShell to remove from user PATH with CollinExecute when available
                 string command = $"powershell -Command \"$path = [Environment]::GetEnvironmentVariable('PATH', 'User'); $newPath = $path -replace [regex]::Escape(';{directory}'), ''; [Environment]::SetEnvironmentVariable('PATH', $newPath, 'User')\"";
+                
+                // TODO: When .NET 9.0 SDK is available, replace with CollinExecute:
+                // var executor = new CommandExecutor();
+                // var result = executor.Execute("powershell", new[] { "-Command", $"$path = [Environment]::GetEnvironmentVariable('PATH', 'User'); $newPath = $path -replace [regex]::Escape(';{directory}'), ''; [Environment]::SetEnvironmentVariable('PATH', $newPath, 'User')" });
+                // bool success = result.ExitCode == 0;
+                
                 bool success = Utils.ExecuteShellCommand(command);
                 if (success)
                 {
