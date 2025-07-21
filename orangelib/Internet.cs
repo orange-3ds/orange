@@ -7,7 +7,7 @@ namespace OrangeLib.Net
     public static class Internet
     {
         private static readonly string DefaultWebPath = Environment.GetEnvironmentVariable("ENVIRONMENT") == "Production"
-            ? "https://example.com/" // Default production URL
+            ? "https://orange.collinsoftware.dev/" // Default production URL
             : "https://localhost:8080/"; // Default development URL
         static string _webPath = DefaultWebPath;
 
