@@ -155,6 +155,16 @@ namespace OrangeLib
                 Utils.CopyFilesRecursively("include", "library/include");
             }
             Utils.CreateZip("library", "library.zip");
+            // Delete the library directory after zipping
+            try
+            {
+                RemoveReadOnlyAttributesRecursively("library");
+                Directory.Delete("library", true);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Failed to delete 'library' directory: {ex.Message}");
+            }
         }
 
         // Helper to remove read-only attributes recursively

@@ -158,56 +158,49 @@ Commands:
                 Console.WriteLine("Usage: orange init <app/library>");
                 return;
             }
+            
             string type = args[1];
+            string templateUrl = String.Empty;
+            string rootFolder = String.Empty;
+
             if (type == "library")
             {
-                Utils.DownloadFileAsync("https://github.com/orange-3ds/3ds-library-template/archive/refs/heads/main.zip", "3ds-template.zip").Wait();
-                using (var archive = ZipFile.OpenRead("3ds-template.zip"))
-                {
-                    string rootFolder = "3ds-library-template-main/";
-                    foreach (var entry in archive.Entries)
-                    {
-                        if (entry.FullName.StartsWith(rootFolder) && !string.IsNullOrEmpty(entry.Name))
-                        {
-                            string destinationPath = Path.Combine(Directory.GetCurrentDirectory(), entry.FullName.Substring(rootFolder.Length));
-                            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
-                            entry.ExtractToFile(destinationPath, true);
-                        }
-                    }
-                }
-                // Delete the zip file after extraction
-                if (File.Exists("3ds-template.zip"))
-                {
-                    File.Delete("3ds-template.zip");
-                }
-                Console.WriteLine("Extracted template project! run orange build to build it!");
+                templateUrl = "https://github.com/orange-3ds/3ds-library-template/archive/refs/heads/main.zip";
+                rootFolder = "3ds-library-template-main/";
             }
             else if (type == "app")
             {
-                Utils.DownloadFileAsync("https://github.com/orange-3ds/3ds-app-template/archive/refs/heads/main.zip", "3ds-template.zip").Wait();
-                using (var archive = ZipFile.OpenRead("3ds-template.zip"))
-                {
-                    string rootFolder = "3ds-app-template-main/";
-                    foreach (var entry in archive.Entries)
-                    {
-                        if (entry.FullName.StartsWith(rootFolder) && !string.IsNullOrEmpty(entry.Name))
-                        {
-                            string destinationPath = Path.Combine(Directory.GetCurrentDirectory(), entry.FullName.Substring(rootFolder.Length));
-                            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
-                            entry.ExtractToFile(destinationPath, true);
-                        }
-                    }
-                }
-                // Delete the zip file after extraction
-                if (File.Exists("3ds-template.zip"))
-                {
-                    File.Delete("3ds-template.zip");
-                }
-                Console.WriteLine("Extracted template project! run orange build to build it!");
+                templateUrl = "https://github.com/orange-3ds/3ds-app-template/archive/refs/heads/main.zip";
+                rootFolder = "3ds-app-template-main/";
             }
             else
             {
                 Console.WriteLine("Unknown type. Use 'app' or 'library'.");
+                return;
+            }
+
+            Utils.DownloadFileAsync(templateUrl, "3ds-template.zip").Wait();
+            ExtractTemplateZip("3ds-template.zip", rootFolder);
+            if (File.Exists("3ds-template.zip"))
+            {
+                File.Delete("3ds-template.zip");
+            }
+            Console.WriteLine("Extracted template project! run orange build to build it!");
+        }
+
+        private static void ExtractTemplateZip(string zipPath, string rootFolder)
+        {
+            using (var archive = ZipFile.OpenRead(zipPath))
+            {
+                foreach (var entry in archive.Entries)
+                {
+                    if (entry.FullName.StartsWith(rootFolder) && !string.IsNullOrEmpty(entry.Name))
+                    {
+                        string destinationPath = Path.Combine(Directory.GetCurrentDirectory(), entry.FullName.Substring(rootFolder.Length));
+                        Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
+                        entry.ExtractToFile(destinationPath, true);
+                    }
+                }
             }
         }
     }
