@@ -12,7 +12,7 @@
 
 </center>
 
-Devkitpro package manager.
+Devkitpro library manager.
 
 
 
