@@ -33,7 +33,7 @@ namespace OrangeLib.Net
             {
                 throw new ArgumentException("library name cannot be null or empty.", nameof(libraryName));
             }
-            string url = $"{_webPath}librarys/{libraryName}.zip";
+            string url = $"{_webPath}libraries/{libraryName}.zip";
             Console.WriteLine($"Fetching library from: {url}");
 
             // Use a unique temporary file path for the download
