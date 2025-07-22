@@ -10,7 +10,7 @@ namespace OrangeLib
         public static bool IsWindows() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         public static bool IsMacOS() => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
         public static bool IsLinux() => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-
+// Only for specific use.
         public static bool ExecuteShellCommand(string command)
         {
             try
@@ -130,8 +130,8 @@ namespace OrangeLib
             }
             if (File.Exists("Makefile"))
             {
-                bool successclean = Utils.ExecuteShellCommand("make clean");
-                bool successmake = Utils.ExecuteShellCommand("make");
+                bool successclean = CollinExecute.Shell.SystemCommand("make clean");
+                bool successmake = CollinExecute.Shell.SystemCommand("make");
                 if (!successclean || !successmake)
                 {
                     Console.Error.WriteLine("Build Failed.");
