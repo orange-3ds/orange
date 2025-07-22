@@ -185,7 +185,7 @@ Commands:
             {
                 File.Delete("3ds-template.zip");
             }
-            Console.WriteLine("Extracted template project! run orange build to build it!");
+            Console.WriteLine("Extracted template project! Run orange build to build it!");
         }
 
         private static void ExtractTemplateZip(string zipPath, string rootFolder)
@@ -196,7 +196,14 @@ Commands:
                 {
                     if (entry.FullName.StartsWith(rootFolder) && !string.IsNullOrEmpty(entry.Name))
                     {
-                        string destinationPath = Path.Combine(Directory.GetCurrentDirectory(), entry.FullName.Substring(rootFolder.Length));
+                        string intendedDirectory = Path.GetFullPath(Directory.GetCurrentDirectory());
+                        string destinationPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), entry.FullName.Substring(rootFolder.Length)));
+                        
+                        if (!destinationPath.StartsWith(intendedDirectory, StringComparison.Ordinal))
+                        {
+                            throw new IOException($"Entry is outside of the target directory: {entry.FullName}");
+                        }
+                        
                         Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
                         entry.ExtractToFile(destinationPath, true);
                     }
