@@ -31,7 +31,7 @@ Commands:
             }
             else if (args[0] == "upload")
             {
-                Console.WriteLine("Upload command is not yet implemented.");
+                Console.WriteLine("Ha! you found a removed command. go to the github to upload a package...");
             }
             else if (args[0] == "init")
             {
@@ -90,8 +90,29 @@ Commands:
         static public void Build(string[] args)
         {
             var packageinfo = new PackageInfo();
-            Information info = packageinfo.LoadCfg("package.cfg");
-            Package.CreatePackage(info);
+            if (File.Exists("package.cfg"))
+            {
+                Information info = packageinfo.LoadCfg("package.cfg");
+                Package.CreatePackage(info);
+                Console.WriteLine("Successfully built package!");
+                return;
+            }
+            else
+            {
+                Information info = packageinfo.LoadCfg("app.cfg");
+                CollinExecute.Shell.SystemCommand("make clean");
+                bool success = CollinExecute.Shell.SystemCommand("make");
+                if (!success)
+                {
+                    Console.Error.WriteLine("Build Failed.");
+                    return;
+                }
+                else
+                {
+                    Console.WriteLine("Successfully built app!");
+                }
+            }
+
             Console.WriteLine("Package build completed successfully.");
 
 
@@ -128,7 +149,16 @@ Commands:
             }
             else if (type == "package")
             {
-                Console.WriteLine("Package initialization is not yet implemented.");
+                var packageconfigtext = @"[info]
+Title: 3dslib
+Description: 3ds library template.
+Author: Zachary Jones
+README: README.md
+
+[dependencies]
+
+";
+                File.WriteAllLines("package.cfg", packageconfigtext);
             }
             else
             {
