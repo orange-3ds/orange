@@ -101,30 +101,29 @@ namespace OrangeLib
             }
         }
     }
-    // TODO: Write logic
-    static public class Package
+    static public class library
     {
-        public static void CreatePackage(Information packageinfo)
+        public static void Createlibrary(Information libraryinfo)
         {
-            if (File.Exists("package.json"))
+            if (File.Exists("library.json"))
             {
-                File.Delete("package.json");
+                File.Delete("library.json");
             }
-            if (File.Exists("package.zip"))
+            if (File.Exists("library.zip"))
             {
-                File.Delete("package.zip");
+                File.Delete("library.zip");
             }
             // Before deleting, ensure all files and subdirectories are not read-only
-            if (Directory.Exists("package"))
+            if (Directory.Exists("library"))
             {
                 try
                 {
-                    RemoveReadOnlyAttributesRecursively("package");
-                    Directory.Delete("package", true);
+                    RemoveReadOnlyAttributesRecursively("library");
+                    Directory.Delete("library", true);
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine($"Failed to delete 'package' directory: {ex.Message}");
+                    Console.Error.WriteLine($"Failed to delete 'library' directory: {ex.Message}");
                     return;
                 }
             }
@@ -138,24 +137,34 @@ namespace OrangeLib
                     return;
                 }
             }
-            // prepare package directory
-            if (!Directory.Exists("package"))
+            // prepare library directory
+            if (!Directory.Exists("library"))
             {
-                Directory.CreateDirectory("package");
+                Directory.CreateDirectory("library");
             }
-            // Serialize json from packageinfo
-            string json = JsonConvert.SerializeObject(packageinfo);
-            using (StreamWriter outputFile = new StreamWriter("package/package.json"))
+            // Serialize json from libraryinfo
+            string json = JsonConvert.SerializeObject(libraryinfo);
+            using (StreamWriter outputFile = new StreamWriter("library/library.json"))
             {
                 outputFile.WriteLine(json);
             }
             // Copy output to build directory
             if (Directory.Exists("lib") && Directory.Exists("include"))
             {
-                Utils.CopyFilesRecursively("lib", "package/lib");
-                Utils.CopyFilesRecursively("include", "package/include");
+                Utils.CopyFilesRecursively("lib", "library/lib");
+                Utils.CopyFilesRecursively("include", "library/include");
             }
-            Utils.CreateZip("package", "package.zip");
+            Utils.CreateZip("library", "library.zip");
+            // Delete the library directory after zipping
+            try
+            {
+                RemoveReadOnlyAttributesRecursively("library");
+                Directory.Delete("library", true);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Failed to delete 'library' directory: {ex.Message}");
+            }
         }
 
         // Helper to remove read-only attributes recursively
@@ -185,17 +194,17 @@ namespace OrangeLib
             }
         }
 
-        public static void InstallPackage(string packageZip)
+        public static void Installlibrary(string libraryZip)
         {
             string dirBeforeTemp = Directory.GetCurrentDirectory();
 
-            // Extract the package zip to a temporary directory
-            string tempDir = Path.Combine(Path.GetTempPath(), "OrangeLibPackage");
+            // Extract the library zip to a temporary directory
+            string tempDir = Path.Combine(Path.GetTempPath(), "OrangeLiblibrary");
             Directory.CreateDirectory(tempDir);
             try
             {
                 // unzip to temp directory
-                ZipFile.ExtractToDirectory(packageZip, tempDir);
+                ZipFile.ExtractToDirectory(libraryZip, tempDir);
                 // copy lib folder to DirBeforeTemp, overright it
                 Utils.CopyDirectoryRecursively(Path.Combine(tempDir, "lib"), Path.Combine(dirBeforeTemp, "lib"));
                 // copy include folder to DirBeforeTemp, overright it

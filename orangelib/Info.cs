@@ -10,7 +10,7 @@ namespace OrangeLib.Info
         public string Dependencies;
         public string ReadmeContents;
     }
-    public class PackageInfo
+    public class libraryInfo
     {
         protected string Title = "Oranges";
         protected string Description = "3ds Homebrew library";
@@ -18,15 +18,15 @@ namespace OrangeLib.Info
         protected string[] Dependencies = new string[] { };
         protected string ReadmeContents = "Oranges readme.";
 
-        public string GetPackageTitle()
+        public string GetlibraryTitle()
         {
             return Title;
         }
-        public string GetPackageDescription()
+        public string GetlibraryDescription()
         {
             return Description;
         }
-        public string GetPackageAuthor()
+        public string GetlibraryAuthor()
         {
             return Author;
         }
@@ -62,9 +62,9 @@ namespace OrangeLib.Info
         {
             return new Information
             {
-                Title = GetPackageTitle(),
-                Description = GetPackageDescription(),
-                Author = GetPackageAuthor(),
+                Title = GetlibraryTitle(),
+                Description = GetlibraryDescription(),
+                Author = GetlibraryAuthor(),
                 Dependencies = GetDependencies(),
                 ReadmeContents = ReadmeContents
             };

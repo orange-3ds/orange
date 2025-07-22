@@ -2,7 +2,9 @@
 using System.IO;
 using System.Threading.Tasks;
 
+#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace OrangeLib.Net
+#pragma warning restore IDE0130 // Namespace does not match folder structure
 {
     public static class Internet
     {
@@ -25,17 +27,17 @@ namespace OrangeLib.Net
         {
             _webPath = DefaultWebPath;
         }
-        public static async Task GetPackage(string packageName)
+        public static async Task Getlibrary(string libraryName)
         {
-            if (string.IsNullOrWhiteSpace(packageName))
+            if (string.IsNullOrWhiteSpace(libraryName))
             {
-                throw new ArgumentException("Package name cannot be null or empty.", nameof(packageName));
+                throw new ArgumentException("library name cannot be null or empty.", nameof(libraryName));
             }
-            string url = $"{_webPath}packages/{packageName}.zip";
-            Console.WriteLine($"Fetching package from: {url}");
+            string url = $"{_webPath}libraries/{libraryName}.zip";
+            Console.WriteLine($"Fetching library from: {url}");
 
             // Use a unique temporary file path for the download
-            string tempFilePath = Path.Combine(Path.GetTempPath(), $"{packageName}_{Guid.NewGuid()}.zip");
+            string tempFilePath = Path.Combine(Path.GetTempPath(), $"{libraryName}_{Guid.NewGuid()}.zip");
             try
             {
                 await Utils.DownloadFileAsync(url, tempFilePath);
@@ -52,11 +54,11 @@ namespace OrangeLib.Net
                     await Console.Error.WriteLineAsync($"Downloaded file is not a valid ZIP archive: {tempFilePath}").ConfigureAwait(false);
                     return;
                 }
-                Package.InstallPackage(tempFilePath);
+                library.Installlibrary(tempFilePath);
             }
             catch (Exception ex)
             {
-                await Console.Error.WriteLineAsync($"Error during package download or installation: {ex.Message}").ConfigureAwait(false);
+                await Console.Error.WriteLineAsync($"Error during library download or installation: {ex.Message}").ConfigureAwait(false);
                 throw;
             }
             finally

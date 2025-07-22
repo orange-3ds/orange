@@ -15,11 +15,11 @@ namespace Installer
         public static bool IsLinux() => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
         
         
-        private const string Version = "0.1.0";
+        private const string Version = "1.0.0";
 
         static void Main(string[] args)
         {
-            Console.WriteLine($"Orange Package Manager Installer v{Version}");
+            Console.WriteLine($"Orange Library Manager Installer v{Version}");
             Console.WriteLine("==========================================");
             
             if (args.Length > 0 && (args[0] == "--help" || args[0] == "-h"))
@@ -51,6 +51,13 @@ namespace Installer
         {
             try
             {
+                if (!IsDotNetInstalled())
+                {
+                    await Console.Error.WriteLineAsync("Error: .NET is not installed or not available in PATH. Please install .NET 9 or later.");
+                    Environment.Exit(1);
+                    return;
+                }
+
                 Console.WriteLine("Starting Orange installation...");
                 
                 // Download Orange binary from GitHub releases
@@ -214,7 +221,9 @@ namespace Installer
                     
                     if (string.IsNullOrEmpty(downloadUrl))
                     {
+#pragma warning disable S112 // General or reserved exceptions should never be thrown
                         throw new Exception($"Binary '{binaryName}' not found in release assets");
+#pragma warning restore S112 // General or reserved exceptions should never be thrown
                     }
                     
                     Console.WriteLine($"Downloading from: {downloadUrl}");
@@ -451,6 +460,34 @@ namespace Installer
             catch (Exception ex)
             {
                 Console.WriteLine($"Warning: Could not remove from PATH: {ex.Message}");
+            }
+        }
+
+        static bool IsDotNetInstalled()
+        {
+            try
+            {
+                // Try to run 'dotnet --version' and check for success
+                var process = new System.Diagnostics.Process
+                {
+                    StartInfo = new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = IsWindows() ? "dotnet.exe" : "dotnet",
+                        Arguments = "--version",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    }
+                };
+                process.Start();
+                string output = process.StandardOutput.ReadToEnd();
+                process.WaitForExit();
+                return process.ExitCode == 0 && !string.IsNullOrWhiteSpace(output);
+            }
+            catch
+            {
+                return false;
             }
         }
     }

@@ -8,6 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CollinExecute" Version="1.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\configlibnet\configlibnet.csproj" />
     <ProjectReference Include="..\orangelib\orangelib.csproj" />
   </ItemGroup>
