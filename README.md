@@ -17,9 +17,10 @@ Devkitpro library manager.
 
 
 
-## Status
+## Installation
 
-Project status: **First version about to be released!**
+Go to the latest github release and download the installer for your platform (os).
+
 ## Acknowledgements
 
  - [Devkitpro](https://github.com/devkitpro)
