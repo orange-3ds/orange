@@ -24,11 +24,11 @@ Project status: **First version about to be released!**
 
  - [Devkitpro](https://github.com/devkitpro)
 
-## How to create a package
+## How to create a library
 
-Use the following command to create a package:
+Use the following command to create a library:
 ```bash
-orange init package
+orange init library
 ```
 
 Then send an email to [orange@collinsoftware.dev](mailto:orange@collinsoftware.dev) and we will review it and publish it.

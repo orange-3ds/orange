@@ -1,5 +1,6 @@
 ﻿using OrangeLib;
 using OrangeLib.Info;
+using System.IO.Compression;
 
 namespace Orange
 {
@@ -9,10 +10,10 @@ namespace Orange
     {
         private const string V = @"Usage: orange [command] [options]
 Commands:
-    - init (app/package)
+    - init (app/library)
     - sync
     - build
-    - add (package path) ";
+    - add (library path) ";
         static readonly string _version = "v1.0.0";
         static readonly string _help = V;
         static void Main(string[] args)
@@ -31,7 +32,7 @@ Commands:
             }
             else if (args[0] == "upload")
             {
-                Console.WriteLine("Ha! you found a removed command. go to the github to upload a package...");
+                Console.WriteLine("Ha! you found a removed command. go to the github to upload a library...");
             }
             else if (args[0] == "init")
             {
@@ -55,51 +56,67 @@ Commands:
             // Validate argument count
             if (args.Length < 2)
             {
-                Console.WriteLine("Usage: orange add <package>");
+                Console.WriteLine("Usage: orange add <library>");
                 return;
             }
 
-            string packagePath = args[1];
+            string libraryPath = args[1];
 
             // Check If file exists
-            if (File.Exists(packagePath))
+            if (File.Exists(libraryPath))
             {
-                Console.WriteLine("Error: package file local installing is not supported yet.");
+                Console.WriteLine("Error: library file local installing is not supported yet.");
                 return;
             }
             else
             {
                 try
                 {
-                    // load package cfg
-                    PackageInfo packageloader = new PackageInfo();
-                    packageloader.LoadCfg("package.cfg");
-                    OrangeLib.Net.Internet.GetPackage(packagePath).GetAwaiter().GetResult();
+                    // load library cfg
+                    libraryInfo libraryloader = new libraryInfo();
+                    if (File.Exists("library.cfg"))
+                    {
+                        libraryloader.LoadCfg("library.cfg");
+                    }
+                    else
+                    {
+                        libraryloader.LoadCfg("app.cfg");
+                    }
+
+                    OrangeLib.Net.Internet.Getlibrary(libraryPath).GetAwaiter().GetResult();
                     // Add dependency to config
-                    packageloader.AddDependencyToCfg(packagePath, "package.cfg");
+                    if (File.Exists("library.cfg"))
+                    {
+                        libraryloader.AddDependencyToCfg(libraryPath, "library.cfg");
+                    }
+                    else
+                    {
+                        libraryloader.AddDependencyToCfg(libraryPath, "app.cfg");
+                    }
+
                     Console.WriteLine("Sucessfully added the dependency.");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error installing package: {ex.Message}");
+                    Console.WriteLine($"Error installing library: {ex.Message}");
                     return;
                 }
-                Console.WriteLine($"Package {packagePath} installed successfully.");
+                Console.WriteLine($"library {libraryPath} installed successfully.");
             }
         }
         static public void Build(string[] args)
         {
-            var packageinfo = new PackageInfo();
-            if (File.Exists("package.cfg"))
+            var libraryinfo = new libraryInfo();
+            if (File.Exists("library.cfg"))
             {
-                Information info = packageinfo.LoadCfg("package.cfg");
-                Package.CreatePackage(info);
-                Console.WriteLine("Successfully built package!");
+                Information info = libraryinfo.LoadCfg("library.cfg");
+                library.Createlibrary(info);
+                Console.WriteLine("Successfully built library!");
                 return;
             }
             else
             {
-                Information info = packageinfo.LoadCfg("app.cfg");
+                Information info = libraryinfo.LoadCfg("app.cfg");
                 CollinExecute.Shell.SystemCommand("make clean");
                 bool success = CollinExecute.Shell.SystemCommand("make");
                 if (!success)
@@ -113,20 +130,19 @@ Commands:
                 }
             }
 
-            Console.WriteLine("Package build completed successfully.");
 
 
         }
         static public void Sync(string[] args)
         {
-            // Ensure production URL is used for package downloads
+            // Ensure production URL is used for library downloads
             OrangeLib.Net.Internet.SetWebPath("https://orange.collinsoftware.dev/");
-            var packageinfo = new PackageInfo();
-            Information info = packageinfo.LoadCfg("package.cfg");
+            var libraryinfo = new libraryInfo();
+            Information info = libraryinfo.LoadCfg("library.cfg");
             var dependencies = info.Dependencies?.Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
             foreach (var dep in dependencies)
             {
-                OrangeLib.Net.Internet.GetPackage(dep).GetAwaiter().GetResult();
+                OrangeLib.Net.Internet.Getlibrary(dep).GetAwaiter().GetResult();
                 Console.WriteLine($"Installed {dep}");
             }
         }
@@ -139,30 +155,59 @@ Commands:
         {
             if (args.Length < 2)
             {
-                Console.WriteLine("Usage: orange init <app/package>");
+                Console.WriteLine("Usage: orange init <app/library>");
                 return;
             }
             string type = args[1];
-            if (type == "app")
+            if (type == "library")
             {
-                Console.WriteLine("App initialization is not yet implemented.");
+                Utils.DownloadFileAsync("https://github.com/orange-3ds/3ds-library-template/archive/refs/heads/main.zip", "3ds-template.zip").Wait();
+                using (var archive = ZipFile.OpenRead("3ds-template.zip"))
+                {
+                    string rootFolder = "3ds-library-template-main/";
+                    foreach (var entry in archive.Entries)
+                    {
+                        if (entry.FullName.StartsWith(rootFolder) && !string.IsNullOrEmpty(entry.Name))
+                        {
+                            string destinationPath = Path.Combine(Directory.GetCurrentDirectory(), entry.FullName.Substring(rootFolder.Length));
+                            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
+                            entry.ExtractToFile(destinationPath, true);
+                        }
+                    }
+                }
+                // Delete the zip file after extraction
+                if (File.Exists("3ds-template.zip"))
+                {
+                    File.Delete("3ds-template.zip");
+                }
+                Console.WriteLine("Extracted template project! run orange build to build it!");
             }
-            else if (type == "package")
+            else if (type == "app")
             {
-                var packageconfigtext = @"[info]
-Title: 3dslib
-Description: 3ds library template.
-Author: Zachary Jones
-README: README.md
-
-[dependencies]
-
-        ";
-                File.WriteAllLines("package.cfg", packageconfigtext.Split(new[] { Environment.NewLine }, StringSplitOptions.None));
+                Utils.DownloadFileAsync("https://github.com/orange-3ds/3ds-app-template/archive/refs/heads/main.zip", "3ds-template.zip").Wait();
+                using (var archive = ZipFile.OpenRead("3ds-template.zip"))
+                {
+                    string rootFolder = "3ds-app-template-main/";
+                    foreach (var entry in archive.Entries)
+                    {
+                        if (entry.FullName.StartsWith(rootFolder) && !string.IsNullOrEmpty(entry.Name))
+                        {
+                            string destinationPath = Path.Combine(Directory.GetCurrentDirectory(), entry.FullName.Substring(rootFolder.Length));
+                            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
+                            entry.ExtractToFile(destinationPath, true);
+                        }
+                    }
+                }
+                // Delete the zip file after extraction
+                if (File.Exists("3ds-template.zip"))
+                {
+                    File.Delete("3ds-template.zip");
+                }
+                Console.WriteLine("Extracted template project! run orange build to build it!");
             }
             else
             {
-                Console.WriteLine("Unknown type. Use 'app' or 'package'.");
+                Console.WriteLine("Unknown type. Use 'app' or 'library'.");
             }
         }
     }

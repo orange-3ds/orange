@@ -35,9 +35,9 @@ The installer provides cross-platform installation and uninstallation capabiliti
 - `Tests/Tests.csproj` → net9.0
 - `Installer/Installer.csproj` → net9.0
 
-**CollinExecute Integration**: Package reference added to Installer project:
+**CollinExecute Integration**: library reference added to Installer project:
 ```xml
-<PackageReference Include="CollinExecute" Version="1.0.0" />
+<libraryReference Include="CollinExecute" Version="1.0.0" />
 ```
 
 ### ⏳ Pending - Requires .NET 9.0 SDK
@@ -131,7 +131,7 @@ dotnet test
 
 ## Files Modified
 
-- `Installer/Installer.csproj` - Updated to .NET 9.0, added CollinExecute package
+- `Installer/Installer.csproj` - Updated to .NET 9.0, added CollinExecute library
 - `Installer/installer.cs` - Complete installer implementation
 - `Tests/Tests.cs` - Added installer tests
 - `Tests/Tests.csproj` - Added Installer project reference, updated to .NET 9.0

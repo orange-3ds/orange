@@ -197,37 +197,37 @@ namespace Tests
         }
     }
 
-    public class PackageInfoTests
+    public class libraryInfoTests
     {
         [Fact]
-        public void GetPackageTitle_ReturnsDefaultTitle()
+        public void GetlibraryTitle_ReturnsDefaultTitle()
         {
-            var packageInfo = new PackageInfo();
-            var result = packageInfo.GetPackageTitle();
+            var libraryInfo = new libraryInfo();
+            var result = libraryInfo.GetlibraryTitle();
             Assert.Equal("Oranges", result);
         }
 
         [Fact]
-        public void GetPackageDescription_ReturnsDefaultDescription()
+        public void GetlibraryDescription_ReturnsDefaultDescription()
         {
-            var packageInfo = new PackageInfo();
-            var result = packageInfo.GetPackageDescription();
+            var libraryInfo = new libraryInfo();
+            var result = libraryInfo.GetlibraryDescription();
             Assert.Equal("3ds Homebrew library", result);
         }
 
         [Fact]
-        public void GetPackageAuthor_ReturnsDefaultAuthor()
+        public void GetlibraryAuthor_ReturnsDefaultAuthor()
         {
-            var packageInfo = new PackageInfo();
-            var result = packageInfo.GetPackageAuthor();
+            var libraryInfo = new libraryInfo();
+            var result = libraryInfo.GetlibraryAuthor();
             Assert.Equal("Me :)", result);
         }
 
         [Fact]
         public void GetDependencies_ReturnsEmptyStringForNoDependencies()
         {
-            var packageInfo = new PackageInfo();
-            var result = packageInfo.GetDependencies();
+            var libraryInfo = new libraryInfo();
+            var result = libraryInfo.GetDependencies();
             Assert.Equal(string.Empty, result);
         }
 
@@ -235,7 +235,7 @@ namespace Tests
         public void ArrayToStringSpaceSeperate_WithValidArray_ReturnsSpaceSeparatedString()
         {
             var array = new string[] { "dep1", "dep2", "dep3" };
-            var result = PackageInfo.ArrayToStringSpaceSeperate(array);
+            var result = libraryInfo.ArrayToStringSpaceSeperate(array);
             Assert.Equal("dep1 dep2 dep3", result);
         }
 
@@ -243,14 +243,14 @@ namespace Tests
         public void ArrayToStringSpaceSeperate_WithEmptyArray_ReturnsEmptyString()
         {
             var array = new string[] { };
-            var result = PackageInfo.ArrayToStringSpaceSeperate(array);
+            var result = libraryInfo.ArrayToStringSpaceSeperate(array);
             Assert.Equal(string.Empty, result);
         }
 
         [Fact]
         public void ArrayToStringSpaceSeperate_WithNullArray_ReturnsEmptyString()
         {
-            var result = PackageInfo.ArrayToStringSpaceSeperate(null!);
+            var result = libraryInfo.ArrayToStringSpaceSeperate(null!);
             Assert.Equal(string.Empty, result);
         }
 
@@ -263,7 +263,7 @@ namespace Tests
                 var expectedContent = "This is a test README file.";
                 File.WriteAllText(tempFile, expectedContent);
                 
-                var result = PackageInfo.GetReadmeContents(tempFile);
+                var result = libraryInfo.GetReadmeContents(tempFile);
                 Assert.Equal(expectedContent, result);
             }
             finally
@@ -276,21 +276,21 @@ namespace Tests
         public void GetReadmeContents_WithNonexistentFile_ReturnsNotFoundMessage()
         {
             var nonexistentPath = "nonexistent_file.txt";
-            var result = PackageInfo.GetReadmeContents(nonexistentPath);
+            var result = libraryInfo.GetReadmeContents(nonexistentPath);
             Assert.Contains("README file not found", result);
         }
 
         [Fact]
         public void GetReadmeContents_WithEmptyPath_ReturnsNoPathMessage()
         {
-            var result = PackageInfo.GetReadmeContents("");
+            var result = libraryInfo.GetReadmeContents("");
             Assert.Equal("README path not provided", result);
         }
 
         [Fact]
         public void GetReadmeContents_WithWhitespacePath_ReturnsNoPathMessage()
         {
-            var result = PackageInfo.GetReadmeContents("   ");
+            var result = libraryInfo.GetReadmeContents("   ");
             Assert.Equal("README path not provided", result);
         }
 
@@ -298,8 +298,8 @@ namespace Tests
         public void LoadCfg_WithValidConfigFile_LoadsCorrectly()
         {
             var configContent = @"[info]
-Title: TestPackage
-Description: A test package
+Title: Testlibrary
+Description: A test library
 Author: Test Author
 README: TestReadme.md
 
@@ -314,11 +314,11 @@ dep2
             {
                 File.WriteAllText(configFile, configContent);
                 
-                var packageInfo = new PackageInfo();
-                var result = packageInfo.LoadCfg(configFile);
+                var libraryInfo = new libraryInfo();
+                var result = libraryInfo.LoadCfg(configFile);
                 
-                Assert.Equal("TestPackage", result.Title);
-                Assert.Equal("A test package", result.Description);
+                Assert.Equal("Testlibrary", result.Title);
+                Assert.Equal("A test library", result.Description);
                 Assert.Equal("Test Author", result.Author);
             }
             finally
@@ -331,8 +331,8 @@ dep2
         [Fact]
         public void LoadCfg_WithNonexistentFile_ThrowsFileNotFoundException()
         {
-            var packageInfo = new PackageInfo();
-            Assert.Throws<FileNotFoundException>(() => packageInfo.LoadCfg("nonexistent.cfg"));
+            var libraryInfo = new libraryInfo();
+            Assert.Throws<FileNotFoundException>(() => libraryInfo.LoadCfg("nonexistent.cfg"));
         }
 
         [Fact]
@@ -341,8 +341,8 @@ dep2
             var tempFile = Path.GetTempFileName();
             try
             {
-                var packageInfo = new PackageInfo();
-                Assert.Throws<FileNotFoundException>(() => packageInfo.LoadCfg(tempFile));
+                var libraryInfo = new libraryInfo();
+                Assert.Throws<FileNotFoundException>(() => libraryInfo.LoadCfg(tempFile));
             }
             finally
             {
@@ -353,16 +353,16 @@ dep2
         [Fact]
         public void LoadCfg_WithEmptyFilename_ThrowsArgumentException()
         {
-            var packageInfo = new PackageInfo();
-            Assert.Throws<ArgumentException>(() => packageInfo.LoadCfg(""));
+            var libraryInfo = new libraryInfo();
+            Assert.Throws<ArgumentException>(() => libraryInfo.LoadCfg(""));
         }
 
         [Fact]
         public void AddDependencyToCfg_WithValidDependency_AddsDependency()
         {
             var configContent = @"[info]
-Title: TestPackage
-Description: A test package
+Title: Testlibrary
+Description: A test library
 Author: Test Author
 
 [dependencies]
@@ -374,8 +374,8 @@ Author: Test Author
             {
                 File.WriteAllText(configFile, configContent);
                 
-                var packageInfo = new PackageInfo();
-                var result = packageInfo.AddDependencyToCfg("newdep", configFile);
+                var libraryInfo = new libraryInfo();
+                var result = libraryInfo.AddDependencyToCfg("newdep", configFile);
                 
                 Assert.Contains("newdep", result.Dependencies);
             }
@@ -389,15 +389,15 @@ Author: Test Author
         [Fact]
         public void AddDependencyToCfg_WithEmptyDependency_ThrowsArgumentException()
         {
-            var packageInfo = new PackageInfo();
-            Assert.Throws<ArgumentException>(() => packageInfo.AddDependencyToCfg("", "test.cfg"));
+            var libraryInfo = new libraryInfo();
+            Assert.Throws<ArgumentException>(() => libraryInfo.AddDependencyToCfg("", "test.cfg"));
         }
 
         [Fact]
         public void GetInformation_ReturnsCorrectStructure()
         {
-            var packageInfo = new PackageInfo();
-            var result = packageInfo.GetInformation();
+            var libraryInfo = new libraryInfo();
+            var result = libraryInfo.GetInformation();
             
             Assert.Equal("Oranges", result.Title);
             Assert.Equal("3ds Homebrew library", result.Description);
@@ -458,41 +458,41 @@ Author: Test Author
         }
 
         [Fact]
-        public async Task GetPackage_WithEmptyPackageName_ThrowsArgumentException()
+        public async Task Getlibrary_WithEmptylibraryName_ThrowsArgumentException()
         {
-            await Assert.ThrowsAsync<ArgumentException>(() => Internet.GetPackage(""));
+            await Assert.ThrowsAsync<ArgumentException>(() => Internet.Getlibrary(""));
         }
 
         [Fact]
-        public async Task GetPackage_WithNullPackageName_ThrowsArgumentException()
+        public async Task Getlibrary_WithNulllibraryName_ThrowsArgumentException()
         {
-            await Assert.ThrowsAsync<ArgumentException>(() => Internet.GetPackage(null!));
+            await Assert.ThrowsAsync<ArgumentException>(() => Internet.Getlibrary(null!));
         }
 
         [Fact]
-        public async Task GetPackage_WithWhitespacePackageName_ThrowsArgumentException()
+        public async Task Getlibrary_WithWhitespacelibraryName_ThrowsArgumentException()
         {
-            await Assert.ThrowsAsync<ArgumentException>(() => Internet.GetPackage("   "));
+            await Assert.ThrowsAsync<ArgumentException>(() => Internet.Getlibrary("   "));
         }
     }
 
-    public class PackageTests
+    public class libraryTests
     {
         [Fact]
-        public void InstallPackage_WithNonexistentZipFile_HandlesGracefully()
+        public void Installlibrary_WithNonexistentZipFile_HandlesGracefully()
         {
             // Test with nonexistent zip file
             // This should not throw an exception but handle it gracefully
-            Package.InstallPackage("nonexistent.zip");
+            library.Installlibrary("nonexistent.zip");
             // If we get here, the method handled the error gracefully
             Assert.True(true);
         }
 
         [Fact]
-        public void CreatePackage_WithValidInformation_CreatesPackageZip()
+        public void Createlibrary_WithValidInformation_CreateslibraryZip()
         {
             var tempDir = Path.GetTempPath();
-            var workingDir = Path.Combine(tempDir, "package_test");
+            var workingDir = Path.Combine(tempDir, "library_test");
             var originalDir = Directory.GetCurrentDirectory();
             
             try
@@ -506,27 +506,27 @@ Author: Test Author
                 File.WriteAllText("lib/test.a", "library content");
                 File.WriteAllText("include/test.h", "header content");
                 
-                var packageInfo = new Information
+                var libraryInfo = new Information
                 {
-                    Title = "TestPackage",
+                    Title = "Testlibrary",
                     Description = "Test Description",
                     Author = "Test Author",
                     Dependencies = "dep1 dep2",
                     ReadmeContents = "Test README"
                 };
                 
-                Package.CreatePackage(packageInfo);
+                library.Createlibrary(libraryInfo);
                 
-                // Verify package.zip was created
-                Assert.True(File.Exists("package.zip"));
+                // Verify library.zip was created
+                Assert.True(File.Exists("library.zip"));
                 
-                // Verify package directory structure
-                Assert.True(Directory.Exists("package"));
-                Assert.True(File.Exists("package/package.json"));
-                Assert.True(Directory.Exists("package/lib"));
-                Assert.True(Directory.Exists("package/include"));
-                Assert.True(File.Exists("package/lib/test.a"));
-                Assert.True(File.Exists("package/include/test.h"));
+                // Verify library directory structure
+                Assert.True(Directory.Exists("library"));
+                Assert.True(File.Exists("library/library.json"));
+                Assert.True(Directory.Exists("library/lib"));
+                Assert.True(Directory.Exists("library/include"));
+                Assert.True(File.Exists("library/lib/test.a"));
+                Assert.True(File.Exists("library/include/test.h"));
             }
             finally
             {
