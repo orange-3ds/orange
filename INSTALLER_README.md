@@ -1,10 +1,10 @@
 # Orange Installer
 
-This document describes the Orange Package Manager installer implementation.
+This document describes the Orange Library Manager installer implementation.
 
 ## Overview
 
-The installer provides cross-platform installation and uninstallation capabilities for the Orange Package Manager. It handles:
+The installer provides cross-platform installation and uninstallation capabilities for the Orange Library Manager. It handles:
 
 - Cross-platform installation (Windows, macOS, Linux)
 - Automatic PATH management

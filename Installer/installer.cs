@@ -19,7 +19,7 @@ namespace Installer
 
         static void Main(string[] args)
         {
-            Console.WriteLine($"Orange Package Manager Installer v{Version}");
+            Console.WriteLine($"Orange Library Manager Installer v{Version}");
             Console.WriteLine("==========================================");
             
             if (args.Length > 0 && (args[0] == "--help" || args[0] == "-h"))
