@@ -157,8 +157,8 @@ README: README.md
 
 [dependencies]
 
-";
-                File.WriteAllLines("package.cfg", packageconfigtext);
+        ";
+                File.WriteAllLines("package.cfg", packageconfigtext.Split(new[] { Environment.NewLine }, StringSplitOptions.None));
             }
             else
             {
