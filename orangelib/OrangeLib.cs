@@ -131,7 +131,23 @@ namespace OrangeLib
             {
                 bool successclean = CollinExecute.Shell.SystemCommand("make clean");
                 Directory.CreateDirectory("build");
-                File.Copy("library.cfg", "build/library.cfg");
+                if (File.Exists("library.cfg"))
+                {
+                    try
+                    {
+                        File.Copy("library.cfg", "build/library.cfg");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine($"Failed to copy 'library.cfg': {ex.Message}");
+                        return;
+                    }
+                }
+                else
+                {
+                    Console.Error.WriteLine("'library.cfg' does not exist. Aborting operation.");
+                    return;
+                }
                 bool successmake = CollinExecute.Shell.SystemCommand("make");
                 if (!successclean || !successmake)
                 {
