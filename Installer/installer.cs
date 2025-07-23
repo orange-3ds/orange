@@ -477,7 +477,7 @@ namespace Installer
             else
             {
                 // On Unix, UID 0 is root
-                return Environment.UserName == "root" || (Environment.GetEnvironmentVariable("USER") == "root") || (GetUid() == 0);
+                return GetUid() == 0;
             }
         }
 
