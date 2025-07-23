@@ -19,7 +19,9 @@ Devkitpro library manager.
 
 ## Installation
 
-Go to the latest github release and download the installer for your platform (os).
+Go to the [Downloads](https://orange.collinsoftware.dev/install/) and get the installer for your Operating System.
+
+Run the program as administrator and then orange will be installed to your system!!! :D
 
 ## Acknowledgements
 
@@ -32,7 +34,6 @@ Use the following command to create a library:
 orange init library
 ```
 
-Then send an email to [orange@collinsoftware.dev](mailto:orange@collinsoftware.dev) and we will review it and publish it.
-
+Create a github issue with the library template and input your information!
 
 

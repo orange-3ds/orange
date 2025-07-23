@@ -130,6 +130,8 @@ namespace OrangeLib
             if (File.Exists("Makefile"))
             {
                 bool successclean = CollinExecute.Shell.SystemCommand("make clean");
+                Directory.CreateDirectory("build");
+                File.Copy("library.cfg", "build/library.cfg");
                 bool successmake = CollinExecute.Shell.SystemCommand("make");
                 if (!successclean || !successmake)
                 {
