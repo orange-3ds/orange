@@ -14,7 +14,7 @@ Commands:
     - sync
     - build
     - add (library path) ";
-        static readonly string _version = "v1.0.0";
+        static readonly string _version = "v1.0.1";
         static readonly string _help = V;
         static void Main(string[] args)
         {
