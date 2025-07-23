@@ -119,7 +119,7 @@ Commands:
                 Information info = libraryinfo.LoadCfg("app.cfg");
                 CollinExecute.Shell.SystemCommand("make clean");
                 Directory.CreateDirectory("build");
-                File.Copy("library.cfg", "build/app.cfg");
+                File.Copy("app.cfg", "build/app.cfg");
                 bool success = CollinExecute.Shell.SystemCommand("make");
                 if (!success)
                 {
