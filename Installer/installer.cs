@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Net.Http;
 using System.Runtime.InteropServices;
+using System.Security.Principal; // For Windows admin check
 using System.Text.Json;
 using System.Threading.Tasks;
 using OrangeLib;
@@ -19,6 +20,21 @@ namespace Installer
 
         static void Main(string[] args)
         {
+            if (!IsRunningAsAdministratorOrRoot())
+            {
+                Console.Error.WriteLine("Error: Installer must be run as administrator/root to install to system directories.");
+                if (IsWindows())
+                {
+                    Console.Error.WriteLine("Please right-click and select 'Run as administrator'.");
+                }
+                else if (IsLinux() || IsMacOS())
+                {
+                    Console.Error.WriteLine("Please run this installer with 'sudo'.");
+                }
+                Environment.Exit(1);
+                return;
+            }
+
             Console.WriteLine($"Orange Library Manager Installer v{Version}");
             Console.WriteLine("==========================================");
             
@@ -51,13 +67,6 @@ namespace Installer
         {
             try
             {
-                if (!IsDotNetInstalled())
-                {
-                    await Console.Error.WriteLineAsync("Error: .NET is not installed or not available in PATH. Please install .NET 9 or later.");
-                    Environment.Exit(1);
-                    return;
-                }
-
                 Console.WriteLine("Starting Orange installation...");
                 
                 // Download Orange binary from GitHub releases
@@ -106,13 +115,7 @@ namespace Installer
                     // Ignore cleanup errors
                 }
 
-                Console.WriteLine();
                 Console.WriteLine("✓ Orange has been installed successfully!");
-                Console.WriteLine($"✓ Installed to: {installDir}");
-                Console.WriteLine("✓ Added to system PATH");
-                Console.WriteLine();
-                Console.WriteLine("You can now use 'orange' command from anywhere in your terminal.");
-                Console.WriteLine("Try: orange --help");
                 
                 if (!IsWindows())
                 {
@@ -191,10 +194,9 @@ namespace Installer
                     // Get latest release info
                     string apiUrl = "https://api.github.com/repos/orange-3ds/orange/releases/latest";
                     string responseJson = await httpClient.GetStringAsync(apiUrl);
-                    
-                    var releaseInfo = JsonSerializer.Deserialize<JsonElement>(responseJson);
-                    
-                    if (!releaseInfo.TryGetProperty("assets", out var assets))
+                    var releaseInfo = System.Text.Json.Nodes.JsonNode.Parse(responseJson);
+                    var assets = releaseInfo?["assets"]?.AsArray();
+                    if (assets == null)
                     {
                         throw new Exception("No assets found in release");
                     }
@@ -205,25 +207,20 @@ namespace Installer
                     
                     // Find the correct asset
                     string downloadUrl = "";
-                    foreach (var asset in assets.EnumerateArray())
+                    foreach (var asset in assets)
                     {
-                        if (asset.TryGetProperty("name", out var nameElement) && 
-                            asset.TryGetProperty("browser_download_url", out var urlElement))
+                        var name = asset?["name"]?.ToString() ?? "";
+                        var url = asset?["browser_download_url"]?.ToString() ?? "";
+                        if (name.Equals(binaryName, StringComparison.OrdinalIgnoreCase))
                         {
-                            string name = nameElement.GetString() ?? "";
-                            if (name.Equals(binaryName, StringComparison.OrdinalIgnoreCase))
-                            {
-                                downloadUrl = urlElement.GetString() ?? "";
-                                break;
-                            }
+                            downloadUrl = url;
+                            break;
                         }
                     }
                     
                     if (string.IsNullOrEmpty(downloadUrl))
                     {
-#pragma warning disable S112 // General or reserved exceptions should never be thrown
                         throw new Exception($"Binary '{binaryName}' not found in release assets");
-#pragma warning restore S112 // General or reserved exceptions should never be thrown
                     }
                     
                     Console.WriteLine($"Downloading from: {downloadUrl}");
@@ -232,9 +229,13 @@ namespace Installer
                     byte[] binaryData = await httpClient.GetByteArrayAsync(downloadUrl);
                     
                     // Save to temporary file
-                    string tempPath = Path.Combine(Path.GetTempPath(), binaryName);
+                    string tempFileName;
+                    if (IsWindows())
+                        tempFileName = binaryName;
+                    else
+                        tempFileName = "orange";
+                    string tempPath = Path.Combine(Path.GetTempPath(), tempFileName);
                     await File.WriteAllBytesAsync(tempPath, binaryData);
-                    
                     Console.WriteLine($"Downloaded binary to: {tempPath}");
                     return tempPath;
                 }
@@ -463,32 +464,59 @@ namespace Installer
             }
         }
 
-        static bool IsDotNetInstalled()
+        static bool IsRunningAsAdministratorOrRoot()
         {
+            if (IsWindows())
+            {
+                using (var identity = WindowsIdentity.GetCurrent())
+                {
+                    var principal = new WindowsPrincipal(identity);
+                    return principal.IsInRole(WindowsBuiltInRole.Administrator);
+                }
+            }
+            else
+            {
+                // On Unix, UID 0 is root
+                return GetUid() == 0;
+            }
+        }
+
+        static int GetUid()
+        {
+            if (IsWindows()) return -1;
             try
             {
-                // Try to run 'dotnet --version' and check for success
-                var process = new System.Diagnostics.Process
-                {
-                    StartInfo = new System.Diagnostics.ProcessStartInfo
-                    {
-                        FileName = IsWindows() ? "dotnet.exe" : "dotnet",
-                        Arguments = "--version",
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    }
-                };
-                process.Start();
-                string output = process.StandardOutput.ReadToEnd();
-                process.WaitForExit();
-                return process.ExitCode == 0 && !string.IsNullOrWhiteSpace(output);
+                return GetUnixUid();
             }
             catch
             {
-                return false;
+                return -1;
             }
         }
+
+        private static IntPtr libcHandle = IntPtr.Zero;
+        private delegate uint GetUidDelegate();
+        private static GetUidDelegate getuid;
+
+        static Program()
+        {
+            // Attempt to load libc dynamically
+            string[] libcNames = { "libc.so.6", "libc" };
+            foreach (var name in libcNames)
+            {
+                if (NativeLibrary.TryLoad(name, out libcHandle))
+                {
+                    IntPtr getuidPtr = NativeLibrary.GetExport(libcHandle, "getuid");
+                    getuid = Marshal.GetDelegateForFunctionPointer<GetUidDelegate>(getuidPtr);
+                    break;
+                }
+            }
+
+            if (libcHandle == IntPtr.Zero || getuid == null)
+            {
+                throw new InvalidOperationException("Failed to load libc or locate getuid function.");
+            }
+        }
+        private static int GetUnixUid() => (int)getuid();
     }
 }

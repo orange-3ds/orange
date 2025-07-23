@@ -14,7 +14,7 @@ Commands:
     - sync
     - build
     - add (library path) ";
-        static readonly string _version = "v1.0.0";
+        static readonly string _version = "v1.0.1";
         static readonly string _help = V;
         static void Main(string[] args)
         {
@@ -118,6 +118,13 @@ Commands:
             {
                 Information info = libraryinfo.LoadCfg("app.cfg");
                 CollinExecute.Shell.SystemCommand("make clean");
+                Directory.CreateDirectory("build");
+                if (!File.Exists("library.cfg"))
+                {
+                    Console.Error.WriteLine("Error: Source file 'library.cfg' does not exist.");
+                    return;
+                }
+                File.Copy("app.cfg", "build/app.cfg");
                 bool success = CollinExecute.Shell.SystemCommand("make");
                 if (!success)
                 {
