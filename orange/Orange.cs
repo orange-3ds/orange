@@ -119,7 +119,12 @@ Commands:
                 Information info = libraryinfo.LoadCfg("app.cfg");
                 CollinExecute.Shell.SystemCommand("make clean");
                 Directory.CreateDirectory("build");
-                File.Copy("library.cfg", "build/app.cfg");
+                if (!File.Exists("library.cfg"))
+                {
+                    Console.Error.WriteLine("Error: Source file 'library.cfg' does not exist.");
+                    return;
+                }
+                File.Copy("app.cfg", "build/app.cfg");
                 bool success = CollinExecute.Shell.SystemCommand("make");
                 if (!success)
                 {
