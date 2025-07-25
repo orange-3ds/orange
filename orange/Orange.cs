@@ -117,7 +117,7 @@ Commands:
             else
             {
                 Information info = libraryinfo.LoadCfg("app.cfg");
-                Utils.ExecuteShellCommand("make clean");
+                CollinExecute.Shell.SystemCommand("make clean");
                 Directory.CreateDirectory("build");
                 if (!File.Exists("library.cfg"))
                 {
@@ -125,7 +125,7 @@ Commands:
                     return;
                 }
                 File.Copy("app.cfg", "build/app.cfg");
-                bool success = Utils.ExecuteShellCommand("make");
+                bool success = CollinExecute.Shell.SystemCommand("make");
                 if (!success)
                 {
                     Console.Error.WriteLine("Build Failed.");
