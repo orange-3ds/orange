@@ -103,7 +103,7 @@ namespace OrangeLib
     }
     static public class library
     {
-        public static void Createlibrary(Information libraryinfo)
+        public static void CreateLibrary(Information libraryinfo)
         {
             if (File.Exists("library.json"))
             {
@@ -212,7 +212,7 @@ namespace OrangeLib
             }
         }
 
-        public static void Installlibrary(string libraryZip)
+        public static void InstallLibrary(string libraryZip)
         {
             string dirBeforeTemp = Directory.GetCurrentDirectory();
 
@@ -223,9 +223,9 @@ namespace OrangeLib
             {
                 // unzip to temp directory
                 ZipFile.ExtractToDirectory(libraryZip, tempDir);
-                // copy lib folder to DirBeforeTemp, overright it
+                // copy lib folder to DirBeforeTemp, overwrite it
                 Utils.CopyDirectoryRecursively(Path.Combine(tempDir, "lib"), Path.Combine(dirBeforeTemp, "lib"));
-                // copy include folder to DirBeforeTemp, overright it
+                // copy include folder to DirBeforeTemp, overwrite it
                 Utils.CopyDirectoryRecursively(Path.Combine(tempDir, "include"), Path.Combine(dirBeforeTemp, "include"));
             }
             catch (Exception ex)

@@ -18,15 +18,15 @@ namespace OrangeLib.Info
         protected string[] Dependencies = new string[] { };
         protected string ReadmeContents = "Oranges readme.";
 
-        public string GetlibraryTitle()
+        public string GetLibraryTitle()
         {
             return Title;
         }
-        public string GetlibraryDescription()
+        public string GetLibraryDescription()
         {
             return Description;
         }
-        public string GetlibraryAuthor()
+        public string GetLibraryAuthor()
         {
             return Author;
         }
@@ -62,9 +62,9 @@ namespace OrangeLib.Info
         {
             return new Information
             {
-                Title = GetlibraryTitle(),
-                Description = GetlibraryDescription(),
-                Author = GetlibraryAuthor(),
+                Title = GetLibraryTitle(),
+                Description = GetLibraryDescription(),
+                Author = GetLibraryAuthor(),
                 Dependencies = GetDependencies(),
                 ReadmeContents = ReadmeContents
             };

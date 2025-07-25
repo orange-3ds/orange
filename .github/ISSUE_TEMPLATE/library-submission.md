@@ -7,6 +7,6 @@ assignees: zacharyj12
 
 ---
 
-__Github url:__
+__GitHub url:__
 
 __Description:__
