@@ -15,7 +15,7 @@ Devkitpro library manager.
 
 ## Installation
 
-Go to the [Downloads](https://orange.collinsoftware.dev/install/) and get the installer for your Operating System.
+Go to the [home](https://orange.collinsoftware.dev/) and get the installer for your Operating System.
 
 Run the program as administrator and then orange will be installed to your system!!! :D
 
