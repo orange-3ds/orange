@@ -83,7 +83,7 @@ Commands:
                         libraryloader.LoadCfg("app.cfg");
                     }
 
-                    OrangeLib.Net.Internet.Getlibrary(libraryPath).GetAwaiter().GetResult();
+                    OrangeLib.Net.Internet.GetLibrary(libraryPath).GetAwaiter().GetResult();
                     // Add dependency to config
                     if (File.Exists("library.cfg"))
                     {
@@ -94,7 +94,7 @@ Commands:
                         libraryloader.AddDependencyToCfg(libraryPath, "app.cfg");
                     }
 
-                    Console.WriteLine("Sucessfully added the dependency.");
+                    Console.WriteLine("Successfully added the dependency.");
                 }
                 catch (Exception ex)
                 {
@@ -110,7 +110,7 @@ Commands:
             if (File.Exists("library.cfg"))
             {
                 Information info = libraryinfo.LoadCfg("library.cfg");
-                library.Createlibrary(info);
+                library.CreateLibrary(info);
                 Console.WriteLine("Successfully built library!");
                 return;
             }
@@ -149,7 +149,7 @@ Commands:
             var dependencies = info.Dependencies?.Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
             foreach (var dep in dependencies)
             {
-                OrangeLib.Net.Internet.Getlibrary(dep).GetAwaiter().GetResult();
+                OrangeLib.Net.Internet.GetLibrary(dep).GetAwaiter().GetResult();
                 Console.WriteLine($"Installed {dep}");
             }
         }

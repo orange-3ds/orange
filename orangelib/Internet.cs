@@ -27,7 +27,7 @@ namespace OrangeLib.Net
         {
             _webPath = DefaultWebPath;
         }
-        public static async Task Getlibrary(string libraryName)
+        public static async Task GetLibrary(string libraryName)
         {
             if (string.IsNullOrWhiteSpace(libraryName))
             {
@@ -54,7 +54,7 @@ namespace OrangeLib.Net
                     await Console.Error.WriteLineAsync($"Downloaded file is not a valid ZIP archive: {tempFilePath}").ConfigureAwait(false);
                     return;
                 }
-                library.Installlibrary(tempFilePath);
+                library.InstallLibrary(tempFilePath);
             }
             catch (Exception ex)
             {
