@@ -116,6 +116,11 @@ Commands:
             }
             else
             {
+                if (!File.Exists("app.cfg"))
+                {
+                    Console.Error.WriteLine("No app.cfg or library.cfg found. Please run 'orange init (app/library)' to create one.");
+                    return;
+                }
                 Information info = libraryinfo.LoadCfg("app.cfg");
                 CollinExecute.Shell.SystemCommand("make clean");
                 Directory.CreateDirectory("build");
