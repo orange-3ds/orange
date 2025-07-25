@@ -8,7 +8,7 @@
 
 </center>
 
-Devkitpro library manager.
+DevkitPro library manager.
 
 
 
@@ -21,7 +21,7 @@ Run the program as administrator and then orange will be installed to your syste
 
 ## Acknowledgements
 
- - [Devkitpro](https://github.com/devkitpro)
+ - [DevkitPro](https://github.com/devkitpro)
 
 ## How to create a library
 

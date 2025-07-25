@@ -200,26 +200,26 @@ namespace Tests
     public class libraryInfoTests
     {
         [Fact]
-        public void GetlibraryTitle_ReturnsDefaultTitle()
+        public void GetLibraryTitle_ReturnsDefaultTitle()
         {
             var libraryInfo = new libraryInfo();
-            var result = libraryInfo.GetlibraryTitle();
+            var result = libraryInfo.GetLibraryTitle();
             Assert.Equal("Oranges", result);
         }
 
         [Fact]
-        public void GetlibraryDescription_ReturnsDefaultDescription()
+        public void GetLibraryDescription_ReturnsDefaultDescription()
         {
             var libraryInfo = new libraryInfo();
-            var result = libraryInfo.GetlibraryDescription();
+            var result = libraryInfo.GetLibraryDescription();
             Assert.Equal("3ds Homebrew library", result);
         }
 
         [Fact]
-        public void GetlibraryAuthor_ReturnsDefaultAuthor()
+        public void GetLibraryAuthor_ReturnsDefaultAuthor()
         {
             var libraryInfo = new libraryInfo();
-            var result = libraryInfo.GetlibraryAuthor();
+            var result = libraryInfo.GetLibraryAuthor();
             Assert.Equal("Me :)", result);
         }
 
@@ -458,38 +458,38 @@ Author: Test Author
         }
 
         [Fact]
-        public async Task Getlibrary_WithEmptylibraryName_ThrowsArgumentException()
+        public async Task GetLibrary_WithEmptyLibraryName_ThrowsArgumentException()
         {
-            await Assert.ThrowsAsync<ArgumentException>(() => Internet.Getlibrary(""));
+            await Assert.ThrowsAsync<ArgumentException>(() => Internet.GetLibrary(""));
         }
 
         [Fact]
-        public async Task Getlibrary_WithNulllibraryName_ThrowsArgumentException()
+        public async Task GetLibrary_WithNullLibraryName_ThrowsArgumentException()
         {
-            await Assert.ThrowsAsync<ArgumentException>(() => Internet.Getlibrary(null!));
+            await Assert.ThrowsAsync<ArgumentException>(() => Internet.GetLibrary(null!));
         }
 
         [Fact]
-        public async Task Getlibrary_WithWhitespacelibraryName_ThrowsArgumentException()
+        public async Task GetLibrary_WithWhitespaceLibraryName_ThrowsArgumentException()
         {
-            await Assert.ThrowsAsync<ArgumentException>(() => Internet.Getlibrary("   "));
+            await Assert.ThrowsAsync<ArgumentException>(() => Internet.GetLibrary("   "));
         }
     }
 
     public class libraryTests
     {
         [Fact]
-        public void Installlibrary_WithNonexistentZipFile_HandlesGracefully()
+        public void InstallLibrary_WithNonexistentZipFile_HandlesGracefully()
         {
             // Test with nonexistent zip file
             // This should not throw an exception but handle it gracefully
-            library.Installlibrary("nonexistent.zip");
+            library.InstallLibrary("nonexistent.zip");
             // If we get here, the method handled the error gracefully
             Assert.True(true);
         }
 
         [Fact]
-        public void Createlibrary_WithValidInformation_CreateslibraryZip()
+        public void CreateLibrary_WithValidInformation_CreatesLibraryZip()
         {
             var tempDir = Path.GetTempPath();
             var workingDir = Path.Combine(tempDir, "library_test");
@@ -508,14 +508,14 @@ Author: Test Author
                 
                 var libraryInfo = new Information
                 {
-                    Title = "Testlibrary",
+                    Title = "TestLibrary",
                     Description = "Test Description",
                     Author = "Test Author",
                     Dependencies = "dep1 dep2",
                     ReadmeContents = "Test README"
                 };
                 
-                library.Createlibrary(libraryInfo);
+                library.CreateLibrary(libraryInfo);
                 
                 // Verify library.zip was created
                 Assert.True(File.Exists("library.zip"));
