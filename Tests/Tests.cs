@@ -520,13 +520,14 @@ Author: Test Author
                 // Verify library.zip was created
                 Assert.True(File.Exists("library.zip"));
                 
-                // Verify library directory structure
-                Assert.True(Directory.Exists("library"));
-                Assert.True(File.Exists("library/library.json"));
-                Assert.True(Directory.Exists("library/lib"));
-                Assert.True(Directory.Exists("library/include"));
-                Assert.True(File.Exists("library/lib/test.a"));
-                Assert.True(File.Exists("library/include/test.h"));
+                // The library directory should be cleaned up after zip creation,
+                // but let's verify the zip contains the expected content
+                using (var zip = System.IO.Compression.ZipFile.OpenRead("library.zip"))
+                {
+                    Assert.Contains(zip.Entries, e => e.FullName == "library.json");
+                    Assert.Contains(zip.Entries, e => e.FullName == "lib/test.a");
+                    Assert.Contains(zip.Entries, e => e.FullName == "include/test.h");
+                }
             }
             finally
             {
