@@ -47,7 +47,7 @@ namespace Tests
         public void ExecuteShellCommand_WithInvalidCommand_ReturnsFalse()
         {
             // Use a command that doesn't exist
-            var result = Utils.ExecuteShellCommand("thiscommanddefinitilynoexists123");
+            var result = Utils.ExecuteShellCommand("thiscommanddefinitelynotexists123");
             Assert.False(result);
         }
 
