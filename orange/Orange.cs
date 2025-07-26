@@ -1,7 +1,6 @@
 ﻿using OrangeLib;
 using OrangeLib.Info;
 using System.IO.Compression;
-using System.Security.Cryptography.X509Certificates;
 using CollinExecute;
 
 namespace Orange
@@ -170,9 +169,9 @@ Commands:
             string ip = args[1];
             int retries = 1;
             // Parse optional retries argument
-            for (int i = 2; i < args.Length - 1; i++)
+            for (int i = 2; i < args.Length; i++)
             {
-                if ((args[i] == "-r" || args[i] == "--retries") && int.TryParse(args[i + 1], out int parsedRetries))
+                if ((args[i] == "-r" || args[i] == "--retries") && i + 1 < args.Length && int.TryParse(args[i + 1], out int parsedRetries))
                 {
                     retries = parsedRetries;
                     break;

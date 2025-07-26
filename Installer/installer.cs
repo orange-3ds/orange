@@ -239,7 +239,10 @@ namespace Installer
 
                 Console.WriteLine();
                 Console.WriteLine("✓ Orange has been uninstalled successfully!");
-                Console.WriteLine("✓ makerom has been uninstalled successfully!");
+                if (makeromRemoved)
+                {
+                    Console.WriteLine("✓ makerom has been uninstalled successfully!");
+                }
                 
                 if (!IsWindows())
                 {
@@ -353,7 +356,8 @@ namespace Installer
                 string binaryName = GetMakeromPlatformBinaryName();
                 if (string.IsNullOrEmpty(binaryName))
                 {
-                    Console.WriteLine($"Warning: makerom is not supported on the current platform ({RuntimeInformation.OSDescription}). Skipping makerom installation.");
+                    Console.WriteLine("Warning: makerom is not supported on the current platform.");
+                    Console.WriteLine($"Platform: {RuntimeInformation.OSDescription}. Skipping makerom installation.");
                     return string.Empty;
                 }
 
@@ -426,7 +430,8 @@ namespace Installer
             }
             else
             {
-                throw new NotSupportedException("makerom is not supported on macOS.");
+                // Return an empty string to indicate unsupported platforms
+                return string.Empty;
             }
         }
 
