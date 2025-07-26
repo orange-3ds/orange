@@ -609,31 +609,32 @@ Author: Test Author
             bool startsWithV = version.StartsWith("v");
             bool hasValidFormat = version.Length > 1 && char.IsDigit(version[1]);
             Assert.True(startsWithV && hasValidFormat);
-            [Fact]
-            public void GetMakeromPlatformBinaryName_ReturnsCorrectName()
-            {
-                // This test verifies the makerom binary name logic
-                string expectedName;
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                {
-                    expectedName = "makerom.exe";
-                }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                {
-                    expectedName = "makerom";
-                }
-                else
-                {
-                    expectedName = null; // macOS not supported
-                }
+        }
 
-                // Since GetMakeromPlatformBinaryName is internal, we can't test it directly
-                // But we can verify the logic is sound
-                if (expectedName != null)
-                {
-                    Assert.False(string.IsNullOrEmpty(expectedName));
-                    Assert.StartsWith("makerom", expectedName);
-                }
+        [Fact]
+        public void GetMakeromPlatformBinaryName_ReturnsCorrectName()
+        {
+            // This test verifies the makerom binary name logic
+            string expectedName;
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                expectedName = "makerom.exe";
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                expectedName = "makerom";
+            }
+            else
+            {
+                expectedName = null; // macOS not supported
+            }
+
+            // Since GetMakeromPlatformBinaryName is internal, we can't test it directly
+            // But we can verify the logic is sound
+            if (expectedName != null)
+            {
+                Assert.False(string.IsNullOrEmpty(expectedName));
+                Assert.StartsWith("makerom", expectedName);
             }
         }
     }
