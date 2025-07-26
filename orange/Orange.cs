@@ -11,11 +11,11 @@ namespace Orange
     {
         private const string V = @"Usage: orange [command] [options]
 Commands:
-    - init (app/library)
+    - init [app/library]
     - sync
     - build
-    - add (library path)
-    - stream (-a 3DS Ip address";
+    - add [library name]
+    - stream [3DS Ip address] (-r --retries Number of times to retry the connction)";
         static readonly string _version = "v1.0.2";
         static readonly string _help = V;
         static void Main(string[] args)
@@ -35,6 +35,10 @@ Commands:
             else if (args[0] == "upload")
             {
                 Console.WriteLine("Ha! you found a removed command. go to the github to upload a library...");
+            }
+            else if (args[0] == "stream")
+            {
+                Stream(args);
             }
             else if (args[0] == "init")
             {
@@ -157,7 +161,7 @@ Commands:
         }
         static public void Stream(string[] args)
         {
-
+            
         }
         private static void ShowHelp()
         {
