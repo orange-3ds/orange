@@ -147,7 +147,6 @@ namespace OrangeLib
             }
             if (File.Exists("Makefile"))
             {
-                //bool successclean = CollinExecute.Shell.SystemCommand("make clean");
                 bool successclean = CollinExecute.Shell.SystemCommand("make clean");
                 Directory.CreateDirectory("build");
                 if (File.Exists("library.cfg"))
@@ -167,7 +166,6 @@ namespace OrangeLib
                     Console.Error.WriteLine("'library.cfg' does not exist. Aborting operation.");
                     return;
                 }
-                //bool successmake = CollinExecute.Shell.SystemCommand("make");
                 bool successmake = CollinExecute.Shell.SystemCommand("make");
                 if (!successclean || !successmake)
                 {

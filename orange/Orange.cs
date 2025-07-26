@@ -129,11 +129,9 @@ Commands:
                     return;
                 }
                 Information info = libraryinfo.LoadCfg("app.cfg");
-                //CollinExecute.Shell.SystemCommand("make clean");
                 CollinExecute.Shell.SystemCommand("make clean");
                 Directory.CreateDirectory("build");
                 File.Copy("app.cfg", "build/app.cfg");
-                //bool success = CollinExecute.Shell.SystemCommand("make");
                 bool success = CollinExecute.Shell.SystemCommand("make");
                 if (!success)
                 {
