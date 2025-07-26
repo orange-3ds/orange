@@ -19,14 +19,6 @@ namespace Tests
         }
 
         [Fact]
-        public void IsMacOS_ReturnsCorrectPlatform()
-        {
-            // Test that the method returns a boolean
-            var result = Utils.IsMacOS();
-            Assert.IsType<bool>(result);
-        }
-
-        [Fact]
         public void IsLinux_ReturnsCorrectPlatform()
         {
             // Test that the method returns a boolean
@@ -574,13 +566,6 @@ Author: Test Author
         public void InstallerIsWindows_ReturnsCorrectPlatform()
         {
             var result = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-            Assert.IsType<bool>(result);
-        }
-
-        [Fact]
-        public void InstallerIsMacOS_ReturnsCorrectPlatform()
-        {
-            var result = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
             Assert.IsType<bool>(result);
         }
 

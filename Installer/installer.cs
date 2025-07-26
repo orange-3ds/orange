@@ -12,7 +12,6 @@ namespace Installer
     static class Program
     {
         public static bool IsWindows() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        public static bool IsMacOS() => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
         public static bool IsLinux() => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
         
         
@@ -27,7 +26,7 @@ namespace Installer
                 {
                     Console.Error.WriteLine("Please right-click and select 'Run as administrator'.");
                 }
-                else if (IsLinux() || IsMacOS())
+                else if (IsLinux())
                 {
                     Console.Error.WriteLine("Please run this installer with 'sudo'.");
                 }
@@ -120,7 +119,7 @@ namespace Installer
                 if (!IsWindows())
                 {
                     Console.WriteLine();
-                    Console.WriteLine("Note: You may need to restart your terminal or run 'source ~/.bashrc' (Linux) or 'source ~/.zshrc' (macOS) for the PATH changes to take effect.");
+                    Console.WriteLine("Note: You may need to restart your terminal or run 'source ~/.bashrc' (Linux) for the PATH changes to take effect.");
                 }
             }
             catch (Exception ex)
@@ -252,10 +251,6 @@ namespace Installer
             if (IsWindows())
             {
                 return "orange.exe";
-            }
-            else if (IsMacOS())
-            {
-                return "orange-macos";
             }
             else if (IsLinux())
             {
