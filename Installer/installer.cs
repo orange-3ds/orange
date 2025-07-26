@@ -374,7 +374,7 @@ namespace Installer
             }
             else
             {
-                return null; // macOS not supported
+                throw new NotSupportedException("makerom is not supported on macOS.");
             }
         }
 
