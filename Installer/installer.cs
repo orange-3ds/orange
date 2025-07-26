@@ -6,13 +6,13 @@ using System.Security.Principal; // For Windows admin check
 using System.Text.Json;
 using System.Threading.Tasks;
 using OrangeLib;
+using CollinExecute;
 
 namespace Installer
 {
     static class Program
     {
         public static bool IsWindows() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        public static bool IsMacOS() => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
         public static bool IsLinux() => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
         
         
@@ -20,6 +20,12 @@ namespace Installer
 
         static void Main(string[] args)
         {
+            if (args.Length > 0 && (args[0] == "--help" || args[0] == "-h"))
+            {
+                ShowHelp();
+                return;
+            }
+            
             if (!IsRunningAsAdministratorOrRoot())
             {
                 Console.Error.WriteLine("Error: Installer must be run as administrator/root to install to system directories.");
@@ -27,7 +33,7 @@ namespace Installer
                 {
                     Console.Error.WriteLine("Please right-click and select 'Run as administrator'.");
                 }
-                else if (IsLinux() || IsMacOS())
+                else if (IsLinux())
                 {
                     Console.Error.WriteLine("Please run this installer with 'sudo'.");
                 }
@@ -38,19 +44,31 @@ namespace Installer
             Console.WriteLine($"Orange Library Manager Installer v{Version}");
             Console.WriteLine("==========================================");
             
-            if (args.Length > 0 && (args[0] == "--help" || args[0] == "-h"))
-            {
-                ShowHelp();
-                return;
-            }
-            
             if (args.Length > 0 && (args[0] == "--uninstall" || args[0] == "-u"))
             {
                 UninstallOrange();
                 return;
             }
 
-            InstallOrangeAsync().Wait();
+            // Parse version argument
+            string? targetVersion = null;
+            if (args.Length >= 2 && (args[0] == "--version" || args[0] == "-v"))
+            {
+                targetVersion = args[1];
+                if (string.IsNullOrWhiteSpace(targetVersion))
+                {
+                    Console.Error.WriteLine("Error: Version argument cannot be empty.");
+                    Environment.Exit(1);
+                    return;
+                }
+                // Ensure version starts with 'v' for consistency with GitHub releases
+                if (!targetVersion.StartsWith("v"))
+                {
+                    targetVersion = "v" + targetVersion;
+                }
+            }
+
+            InstallOrangeAsync(targetVersion).Wait();
         }
 
         static void ShowHelp()
@@ -59,18 +77,30 @@ namespace Installer
             Console.WriteLine("Options:");
             Console.WriteLine("  --help, -h        Show this help message");
             Console.WriteLine("  --uninstall, -u   Uninstall Orange");
+            Console.WriteLine("  --version, -v     Specify version to install (e.g., v1.0.0)");
             Console.WriteLine();
-            Console.WriteLine("Default behavior (no options): Install Orange");
+            Console.WriteLine("Default behavior (no options): Install latest Orange version");
+            Console.WriteLine();
+            Console.WriteLine("Examples:");
+            Console.WriteLine("  Installer                    # Install latest version");
+            Console.WriteLine("  Installer --version v1.0.2   # Install specific version");
         }
 
-        static async Task InstallOrangeAsync()
+        static async Task InstallOrangeAsync(string? targetVersion = null)
         {
             try
             {
-                Console.WriteLine("Starting Orange installation...");
+                if (targetVersion != null)
+                {
+                    Console.WriteLine($"Starting Orange installation for version {targetVersion}...");
+                }
+                else
+                {
+                    Console.WriteLine("Starting Orange installation (latest version)...");
+                }
                 
                 // Download Orange binary from GitHub releases
-                string orangeExePath = await DownloadOrangeBinaryAsync();
+                string orangeExePath = await DownloadOrangeBinaryAsync(targetVersion);
                 if (string.IsNullOrEmpty(orangeExePath))
                 {
                     await Console.Error.WriteLineAsync("Error: Failed to download Orange binary.");
@@ -79,6 +109,17 @@ namespace Installer
                 }
 
                 Console.WriteLine($"Downloaded Orange binary: {orangeExePath}");
+
+                // Download makerom binary from GitHub releases
+                string makeromExePath = await DownloadMakeromBinaryAsync();
+                if (string.IsNullOrEmpty(makeromExePath))
+                {
+                    await Console.Error.WriteLineAsync("Warning: Failed to download makerom binary. Continuing with Orange installation only.");
+                }
+                else
+                {
+                    Console.WriteLine($"Downloaded makerom binary: {makeromExePath}");
+                }
 
                 // Get installation directory
                 string installDir = GetInstallDirectory();
@@ -92,23 +133,41 @@ namespace Installer
                 }
 
                 // Copy Orange executable to installation directory
-                string targetExePath = Path.Combine(installDir, Path.GetFileName(orangeExePath));
-                File.Copy(orangeExePath, targetExePath, true);
+                string targetOrangeExePath = Path.Combine(installDir, Path.GetFileName(orangeExePath));
+                File.Copy(orangeExePath, targetOrangeExePath, true);
                 Console.WriteLine("Copied Orange executable.");
 
-                // Make executable on Unix systems
+                // Copy makerom executable to installation directory if downloaded successfully
+                if (!string.IsNullOrEmpty(makeromExePath))
+                {
+                    string targetMakeromExePath = Path.Combine(installDir, Path.GetFileName(makeromExePath));
+                    File.Copy(makeromExePath, targetMakeromExePath, true);
+                    Console.WriteLine("Copied makerom executable.");
+
+                    // Make makerom executable on Unix systems
+                    if (!IsWindows())
+                    {
+                        MakeExecutable(targetMakeromExePath);
+                    }
+                }
+
+                // Make Orange executable on Unix systems
                 if (!IsWindows())
                 {
-                    MakeExecutable(targetExePath);
+                    MakeExecutable(targetOrangeExePath);
                 }
 
                 // Add to PATH
                 AddToPath(installDir);
 
-                // Clean up downloaded file
+                // Clean up downloaded files
                 try
                 {
                     File.Delete(orangeExePath);
+                    if (!string.IsNullOrEmpty(makeromExePath))
+                    {
+                        File.Delete(makeromExePath);
+                    }
                 }
                 catch
                 {
@@ -116,11 +175,15 @@ namespace Installer
                 }
 
                 Console.WriteLine("✓ Orange has been installed successfully!");
+                if (!string.IsNullOrEmpty(makeromExePath))
+                {
+                    Console.WriteLine("✓ makerom has been installed successfully!");
+                }
                 
                 if (!IsWindows())
                 {
                     Console.WriteLine();
-                    Console.WriteLine("Note: You may need to restart your terminal or run 'source ~/.bashrc' (Linux) or 'source ~/.zshrc' (macOS) for the PATH changes to take effect.");
+                    Console.WriteLine("Note: You may need to restart your terminal or run 'source ~/.bashrc' (Linux) for the PATH changes to take effect.");
                 }
             }
             catch (Exception ex)
@@ -148,6 +211,14 @@ namespace Installer
                         Console.WriteLine("Removed Orange executable.");
                     }
 
+                    // Remove makerom files
+                    string makeromExePath = Path.Combine(installDir, IsWindows() ? "makerom.exe" : "makerom");
+                    if (File.Exists(makeromExePath))
+                    {
+                        File.Delete(makeromExePath);
+                        Console.WriteLine("Removed makerom executable.");
+                    }
+
                     // Try to remove directory if empty
                     try
                     {
@@ -168,6 +239,9 @@ namespace Installer
 
                 Console.WriteLine();
                 Console.WriteLine("✓ Orange has been uninstalled successfully!");
+
+                Console.WriteLine("✓ makerom has been uninstalled successfully!");
+                
                 
                 if (!IsWindows())
                 {
@@ -181,19 +255,45 @@ namespace Installer
             }
         }
 
-        static async Task<string> DownloadOrangeBinaryAsync()
+        static async Task<string> DownloadOrangeBinaryAsync(string? targetVersion = null)
         {
             try
             {
-                Console.WriteLine("Fetching latest release information from GitHub...");
+                if (targetVersion != null)
+                {
+                    Console.WriteLine($"Fetching release information for version {targetVersion} from GitHub...");
+                }
+                else
+                {
+                    Console.WriteLine("Fetching latest release information from GitHub...");
+                }
                 
                 using (var httpClient = new HttpClient())
                 {
                     httpClient.DefaultRequestHeaders.Add("User-Agent", "Orange-Installer/1.0");
                     
-                    // Get latest release info
-                    string apiUrl = "https://api.github.com/repos/orange-3ds/orange/releases/latest";
-                    string responseJson = await httpClient.GetStringAsync(apiUrl);
+                    // Get release info - either latest or specific version
+                    string apiUrl = targetVersion != null
+                        ? $"https://api.github.com/repos/orange-3ds/orange/releases/tags/{targetVersion}"
+                        : "https://api.github.com/repos/orange-3ds/orange/releases/latest";
+                    
+                    string responseJson;
+                    try
+                    {
+                        responseJson = await httpClient.GetStringAsync(apiUrl);
+                    }
+                    catch (HttpRequestException ex)
+                    {
+                        if (targetVersion != null)
+                        {
+                            throw new Exception($"Version '{targetVersion}' not found. Please check that this version exists in the releases.");
+                        }
+                        else
+                        {
+                            throw new Exception($"Failed to fetch latest release information: {ex.Message}");
+                        }
+                    }
+                    
                     var releaseInfo = System.Text.Json.Nodes.JsonNode.Parse(responseJson);
                     var assets = releaseInfo?["assets"]?.AsArray();
                     if (assets == null)
@@ -247,15 +347,65 @@ namespace Installer
             }
         }
         
+        static async Task<string> DownloadMakeromBinaryAsync()
+        {
+            try
+            {
+                // Check if platform is supported
+                string binaryName = GetMakeromPlatformBinaryName();
+                if (string.IsNullOrEmpty(binaryName))
+                {
+                    Console.WriteLine("Warning: makerom is not supported on the current platform.");
+                    Console.WriteLine($"Platform: {RuntimeInformation.OSDescription}. Skipping makerom installation.");
+                    return string.Empty;
+                }
+
+                Console.WriteLine($"Downloading makerom binary: {binaryName}");
+                
+                using (var httpClient = new HttpClient())
+                {
+                    httpClient.DefaultRequestHeaders.Add("User-Agent", "Orange-Installer/1.0");
+                    
+                    // Direct download URLs from orange.collinsoftware.dev
+                    string downloadUrl;
+                    if (IsWindows())
+                    {
+                        downloadUrl = "https://orange.collinsoftware.dev/makerom/makerom.exe";
+                    }
+                    else if (IsLinux())
+                    {
+                        downloadUrl = "https://orange.collinsoftware.dev/makerom/makerom";
+                    }
+                    else
+                    {
+                        return string.Empty; // Should not reach here due to earlier check
+                    }
+                    
+                    Console.WriteLine($"Downloading makerom from: {downloadUrl}");
+                    
+                    // Download the binary
+                    byte[] binaryData = await httpClient.GetByteArrayAsync(downloadUrl);
+                    
+                    // Save to temporary file
+                    string tempFileName = binaryName;
+                    string tempPath = Path.Combine(Path.GetTempPath(), tempFileName);
+                    await File.WriteAllBytesAsync(tempPath, binaryData);
+                    Console.WriteLine($"Downloaded makerom binary to: {tempPath}");
+                    return tempPath;
+                }
+            }
+            catch (Exception ex)
+            {
+                await Console.Error.WriteLineAsync($"Failed to download makerom binary: {ex.Message}");
+                return string.Empty;
+            }
+        }
+        
         static string GetPlatformBinaryName()
         {
             if (IsWindows())
             {
                 return "orange.exe";
-            }
-            else if (IsMacOS())
-            {
-                return "orange-macos";
             }
             else if (IsLinux())
             {
@@ -264,6 +414,23 @@ namespace Installer
             else
             {
                 return "orange";
+            }
+        }
+
+        static string GetMakeromPlatformBinaryName()
+        {
+            if (IsWindows())
+            {
+                return "makerom.exe";
+            }
+            else if (IsLinux())
+            {
+                return "makerom";
+            }
+            else
+            {
+                // Return an empty string to indicate unsupported platforms
+                return string.Empty;
             }
         }
 
@@ -283,12 +450,11 @@ namespace Installer
         static void MakeExecutable(string filePath)
         {
             // Make file executable on Unix systems using CollinExecute when available
-            // For now, falling back to Utils.ExecuteShellCommand
             string chmodCommand = $"chmod +x \"{filePath}\"";
             
     
             
-            bool success = Utils.ExecuteShellCommand(chmodCommand);
+            bool success = CollinExecute.Shell.SystemCommand(chmodCommand);
             if (success)
             {
                 Console.WriteLine("Made Orange executable.");
@@ -319,7 +485,7 @@ namespace Installer
                 string command = $"powershell -Command \"$env:PATH += ';{directory}'; [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'User')\"";
   
                 
-                bool success = Utils.ExecuteShellCommand(command);
+                bool success = CollinExecute.Shell.SystemCommand(command);
                 if (success)
                 {
                     Console.WriteLine("Added to Windows PATH.");
@@ -414,7 +580,7 @@ namespace Installer
                 string command = $"powershell -Command \"$path = [Environment]::GetEnvironmentVariable('PATH', 'User'); $newPath = $path -replace [regex]::Escape(';{directory}'), ''; [Environment]::SetEnvironmentVariable('PATH', $newPath, 'User')\"";
                 
                 
-                bool success = Utils.ExecuteShellCommand(command);
+                bool success = CollinExecute.Shell.SystemCommand(command);
                 if (success)
                 {
                     Console.WriteLine("Removed from Windows PATH.");

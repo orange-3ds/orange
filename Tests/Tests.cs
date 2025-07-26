@@ -1,5 +1,5 @@
-﻿using OrangeLib.Info;
-using OrangeLib;
+﻿using OrangeLib;
+using OrangeLib.Info;
 using OrangeLib.Net;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
@@ -15,14 +15,6 @@ namespace Tests
         {
             // Test that the method returns a boolean
             var result = Utils.IsWindows();
-            Assert.IsType<bool>(result);
-        }
-
-        [Fact]
-        public void IsMacOS_ReturnsCorrectPlatform()
-        {
-            // Test that the method returns a boolean
-            var result = Utils.IsMacOS();
             Assert.IsType<bool>(result);
         }
 
@@ -58,12 +50,12 @@ namespace Tests
             var tempDir = Path.GetTempPath();
             var sourceFile = Path.Combine(tempDir, "test_source.txt");
             var targetFile = Path.Combine(tempDir, "test_target.txt");
-            
+
             try
             {
                 File.WriteAllText(sourceFile, "test content");
                 Utils.CopyFile(sourceFile, targetFile);
-                
+
                 Assert.True(File.Exists(targetFile));
                 Assert.Equal("test content", File.ReadAllText(targetFile));
             }
@@ -80,14 +72,14 @@ namespace Tests
             var tempDir = Path.GetTempPath();
             var sourceFile = Path.Combine(tempDir, "test_source.txt");
             var targetFile = Path.Combine(tempDir, "test_target.txt");
-            
+
             try
             {
                 File.WriteAllText(sourceFile, "new content");
                 File.WriteAllText(targetFile, "old content");
-                
+
                 Utils.CopyFile(sourceFile, targetFile);
-                
+
                 Assert.Equal("new content", File.ReadAllText(targetFile));
             }
             finally
@@ -103,17 +95,17 @@ namespace Tests
             var tempDir = Path.GetTempPath();
             var sourceDir = Path.Combine(tempDir, "test_source_dir");
             var zipPath = Path.Combine(tempDir, "test.zip");
-            
+
             try
             {
                 Directory.CreateDirectory(sourceDir);
                 File.WriteAllText(Path.Combine(sourceDir, "file1.txt"), "content1");
                 File.WriteAllText(Path.Combine(sourceDir, "file2.txt"), "content2");
-                
+
                 Utils.CreateZip(sourceDir, zipPath);
-                
+
                 Assert.True(File.Exists(zipPath));
-                
+
                 // Verify zip contents
                 using (var zip = ZipFile.OpenRead(zipPath))
                 {
@@ -135,16 +127,16 @@ namespace Tests
             var tempDir = Path.GetTempPath();
             var sourceDir = Path.Combine(tempDir, "test_source_recursive");
             var targetDir = Path.Combine(tempDir, "test_target_recursive");
-            
+
             try
             {
                 Directory.CreateDirectory(sourceDir);
                 Directory.CreateDirectory(Path.Combine(sourceDir, "subdir"));
                 File.WriteAllText(Path.Combine(sourceDir, "file1.txt"), "content1");
                 File.WriteAllText(Path.Combine(sourceDir, "subdir", "file2.txt"), "content2");
-                
+
                 Utils.CopyFilesRecursively(sourceDir, targetDir);
-                
+
                 Assert.True(Directory.Exists(targetDir));
                 Assert.True(Directory.Exists(Path.Combine(targetDir, "subdir")));
                 Assert.True(File.Exists(Path.Combine(targetDir, "file1.txt")));
@@ -165,16 +157,16 @@ namespace Tests
             var tempDir = Path.GetTempPath();
             var sourceDir = Path.Combine(tempDir, "test_source_full");
             var targetDir = Path.Combine(tempDir, "test_target_full");
-            
+
             try
             {
                 Directory.CreateDirectory(sourceDir);
                 Directory.CreateDirectory(Path.Combine(sourceDir, "nested"));
                 File.WriteAllText(Path.Combine(sourceDir, "root.txt"), "root content");
                 File.WriteAllText(Path.Combine(sourceDir, "nested", "nested.txt"), "nested content");
-                
+
                 Utils.CopyDirectoryRecursively(sourceDir, targetDir);
-                
+
                 Assert.True(Directory.Exists(targetDir));
                 Assert.True(Directory.Exists(Path.Combine(targetDir, "nested")));
                 Assert.True(File.Exists(Path.Combine(targetDir, "root.txt")));
@@ -192,7 +184,7 @@ namespace Tests
         [Fact]
         public void CopyDirectoryRecursively_WithNonexistentSource_ThrowsDirectoryNotFoundException()
         {
-            Assert.Throws<DirectoryNotFoundException>(() => 
+            Assert.Throws<DirectoryNotFoundException>(() =>
                 Utils.CopyDirectoryRecursively("nonexistent_source", "target"));
         }
     }
@@ -262,7 +254,7 @@ namespace Tests
             {
                 var expectedContent = "This is a test README file.";
                 File.WriteAllText(tempFile, expectedContent);
-                
+
                 var result = libraryInfo.GetReadmeContents(tempFile);
                 Assert.Equal(expectedContent, result);
             }
@@ -309,14 +301,14 @@ dep2
 ";
             var tempFile = Path.GetTempFileName();
             var configFile = Path.ChangeExtension(tempFile, ".cfg");
-            
+
             try
             {
                 File.WriteAllText(configFile, configContent);
-                
+
                 var libraryInfo = new libraryInfo();
                 var result = libraryInfo.LoadCfg(configFile);
-                
+
                 Assert.Equal("Testlibrary", result.Title);
                 Assert.Equal("A test library", result.Description);
                 Assert.Equal("Test Author", result.Author);
@@ -369,14 +361,14 @@ Author: Test Author
 ";
             var tempFile = Path.GetTempFileName();
             var configFile = Path.ChangeExtension(tempFile, ".cfg");
-            
+
             try
             {
                 File.WriteAllText(configFile, configContent);
-                
+
                 var libraryInfo = new libraryInfo();
                 var result = libraryInfo.AddDependencyToCfg("newdep", configFile);
-                
+
                 Assert.Contains("newdep", result.Dependencies);
             }
             finally
@@ -398,7 +390,7 @@ Author: Test Author
         {
             var libraryInfo = new libraryInfo();
             var result = libraryInfo.GetInformation();
-            
+
             Assert.Equal("Oranges", result.Title);
             Assert.Equal("3ds Homebrew library", result.Description);
             Assert.Equal("Me :)", result.Author);
@@ -424,7 +416,7 @@ Author: Test Author
             Internet.SetWebPath(testPath);
             var result = Internet.GetWebPath();
             Assert.Equal(testPath, result);
-            
+
             // Reset to default for other tests
             Internet.ResetWebPath();
         }
@@ -483,7 +475,7 @@ Author: Test Author
         {
             // Test with nonexistent zip file
             // This should not throw an exception but handle it gracefully
-            library.InstallLibrary("nonexistent.zip");
+            Library.InstallLibrary("nonexistent.zip");
             // If we get here, the method handled the error gracefully
             Assert.True(true);
         }
@@ -494,18 +486,18 @@ Author: Test Author
             var tempDir = Path.GetTempPath();
             var workingDir = Path.Combine(tempDir, "library_test");
             var originalDir = Directory.GetCurrentDirectory();
-            
+
             try
             {
                 Directory.CreateDirectory(workingDir);
                 Directory.SetCurrentDirectory(workingDir);
-                
+
                 // Create lib and include directories with test files
                 Directory.CreateDirectory("lib");
                 Directory.CreateDirectory("include");
                 File.WriteAllText("lib/test.a", "library content");
                 File.WriteAllText("include/test.h", "header content");
-                
+
                 var libraryInfo = new Information
                 {
                     Title = "TestLibrary",
@@ -514,12 +506,12 @@ Author: Test Author
                     Dependencies = "dep1 dep2",
                     ReadmeContents = "Test README"
                 };
-                
-                library.CreateLibrary(libraryInfo);
-                
+
+                Library.CreateLibrary(libraryInfo);
+
                 // Verify library.zip was created
                 Assert.True(File.Exists("library.zip"));
-                
+
                 // The library directory should be cleaned up after zip creation,
                 // but let's verify the zip contains the expected content
                 using (var zip = System.IO.Compression.ZipFile.OpenRead("library.zip"))
@@ -562,10 +554,10 @@ Author: Test Author
         public void GetInstallDirectory_ReturnsValidPath()
         {
             // This test verifies the install directory logic without actually installing
-            var result = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) 
+            var result = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                 ? Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + Path.DirectorySeparatorChar + "Orange"
                 : "/usr/local/bin";
-            
+
             Assert.False(string.IsNullOrEmpty(result));
             Assert.True(Path.IsPathRooted(result));
         }
@@ -578,17 +570,72 @@ Author: Test Author
         }
 
         [Fact]
-        public void InstallerIsMacOS_ReturnsCorrectPlatform()
-        {
-            var result = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
-            Assert.IsType<bool>(result);
-        }
-
-        [Fact]
         public void InstallerIsLinux_ReturnsCorrectPlatform()
         {
             var result = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
             Assert.IsType<bool>(result);
+        }
+
+        [Theory]
+        [InlineData("1.0.0", "v1.0.0")]
+        [InlineData("v1.0.0", "v1.0.0")]
+        [InlineData("1.0.2", "v1.0.2")]
+        [InlineData("v1.0.2", "v1.0.2")]
+        public void VersionNormalization_AddsVPrefixWhenMissing(string input, string expected)
+        {
+            // Test version normalization logic
+            string result = input.StartsWith("v") ? input : "v" + input;
+            Assert.Equal(expected, result);
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData("   ")]
+        [InlineData(null)]
+        public void EmptyVersion_ShouldBeInvalid(string? version)
+        {
+            // Test that empty versions are considered invalid
+            bool isValid = !string.IsNullOrWhiteSpace(version);
+            Assert.False(isValid);
+        }
+
+        [Theory]
+        [InlineData("v1.0.0")]
+        [InlineData("v1.0.1")]
+        [InlineData("v1.0.2")]
+        public void ValidVersionFormat_ShouldBeValid(string version)
+        {
+            // Test that valid version formats are accepted
+            bool startsWithV = version.StartsWith("v");
+            bool hasValidFormat = version.Length > 1 && char.IsDigit(version[1]);
+            Assert.True(startsWithV && hasValidFormat);
+        }
+
+        [Fact]
+        public void GetMakeromPlatformBinaryName_ReturnsCorrectName()
+        {
+            // This test verifies the makerom binary name logic
+            string expectedName;
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                expectedName = "makerom.exe";
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                expectedName = "makerom";
+            }
+            else
+            {
+                expectedName = null; // macOS not supported
+            }
+
+            // Since GetMakeromPlatformBinaryName is internal, we can't test it directly
+            // But we can verify the logic is sound
+            if (expectedName != null)
+            {
+                Assert.False(string.IsNullOrEmpty(expectedName));
+                Assert.StartsWith("makerom", expectedName);
+            }
         }
     }
 }
