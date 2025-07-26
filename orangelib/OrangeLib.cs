@@ -11,17 +11,23 @@ namespace OrangeLib
         public static bool Stream3dsxTo3ds(string ip, int retrys)
         {
             int i = 0;
-            while (i > retrys)
+            while (i < retrys)
             {
                 try
                 {
                     bool success = CollinExecute.Shell.SystemCommand($"3dslink -a {ip} -r {retrys}", false, true);
+                    if (success)
+                    {
+                        return true;
+                    }
                 }
-                catch { 
-                    return false;
+                catch
+                {
+                    // Log or handle the exception if needed
                 }
+                i++;
             }
-            return true;
+            return false;
         }
     }
     public static class Utils
