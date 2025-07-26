@@ -161,7 +161,31 @@ Commands:
         }
         static public void Stream(string[] args)
         {
-            
+            if (args.Length < 2)
+            {
+                Console.WriteLine("Usage: orange stream [3DS Ip address] (-r --retries Number of times to retry the connction)");
+                return;
+            }
+            string ip = args[1];
+            int retries = 1;
+            // Parse optional retries argument
+            for (int i = 2; i < args.Length - 1; i++)
+            {
+                if ((args[i] == "-r" || args[i] == "--retries") && int.TryParse(args[i + 1], out int parsedRetries))
+                {
+                    retries = parsedRetries;
+                    break;
+                }
+            }
+            bool success = OrangeLib.Streaming.Stream3dsxTo3ds(ip, retries);
+            if (success)
+            {
+                Console.WriteLine($"Successfully streamed to 3DS at {ip}.");
+            }
+            else
+            {
+                Console.WriteLine($"Failed to stream to 3DS at {ip} after {retries} attempt(s).");
+            }
         }
         private static void ShowHelp()
         {

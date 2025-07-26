@@ -7,7 +7,7 @@ namespace OrangeLib
 {
     public static class Streaming
     {
-        static bool Stream3dsxTo3ds(string ip, int retrys)
+        public static bool Stream3dsxTo3ds(string ip, int retrys)
         {
             int i = 0;
             while (i > retrys)
