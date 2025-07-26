@@ -297,7 +297,7 @@ namespace Installer
                 string binaryName = GetMakeromPlatformBinaryName();
                 if (string.IsNullOrEmpty(binaryName))
                 {
-                    Console.WriteLine("Warning: makerom is not supported on macOS. Skipping makerom installation.");
+                    Console.WriteLine($"Warning: makerom is not supported on the current platform ({RuntimeInformation.OSDescription}). Skipping makerom installation.");
                     return string.Empty;
                 }
 
