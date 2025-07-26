@@ -3,6 +3,7 @@ using OrangeLib.Info;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
+using CollinExecute;
 namespace OrangeLib
 {
     public static class Streaming
@@ -15,7 +16,7 @@ namespace OrangeLib
                 try
                 {
                     //bool success = CollinExecute.Shell.SystemCommand($"3dslink -a {ip} -r {retrys}", false, true);
-                    bool success = Utils.ExecuteShellCommand($"3dslink -a {ip} -r {retrys}");
+                    bool success = CollinExecute.Shell.SystemCommand($"3dslink -a {ip} -r {retrys}", false, true);
                 }
                 catch { 
                     return false;
@@ -148,7 +149,7 @@ namespace OrangeLib
             if (File.Exists("Makefile"))
             {
                 //bool successclean = CollinExecute.Shell.SystemCommand("make clean");
-                bool successclean = Utils.ExecuteShellCommand("make clean");
+                bool successclean = CollinExecute.Shell.SystemCommand("make clean");
                 Directory.CreateDirectory("build");
                 if (File.Exists("library.cfg"))
                 {
@@ -168,7 +169,7 @@ namespace OrangeLib
                     return;
                 }
                 //bool successmake = CollinExecute.Shell.SystemCommand("make");
-                bool successmake = Utils.ExecuteShellCommand("make");
+                bool successmake = CollinExecute.Shell.SystemCommand("make");
                 if (!successclean || !successmake)
                 {
                     Console.Error.WriteLine("Build Failed.");

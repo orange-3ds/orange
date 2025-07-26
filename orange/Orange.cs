@@ -2,6 +2,7 @@
 using OrangeLib.Info;
 using System.IO.Compression;
 using System.Security.Cryptography.X509Certificates;
+using CollinExecute;
 
 namespace Orange
 {
@@ -129,11 +130,11 @@ Commands:
                 }
                 Information info = libraryinfo.LoadCfg("app.cfg");
                 //CollinExecute.Shell.SystemCommand("make clean");
-                Utils.ExecuteShellCommand("make clean");
+                CollinExecute.Shell.SystemCommand("make clean");
                 Directory.CreateDirectory("build");
                 File.Copy("app.cfg", "build/app.cfg");
                 //bool success = CollinExecute.Shell.SystemCommand("make");
-                bool success = Utils.ExecuteShellCommand("make");
+                bool success = CollinExecute.Shell.SystemCommand("make");
                 if (!success)
                 {
                     Console.Error.WriteLine("Build Failed.");
