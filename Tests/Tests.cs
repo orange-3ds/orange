@@ -600,23 +600,22 @@ Author: Test Author
             {
                 expectedName = "makerom.exe";
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                expectedName = "makerom-macos";
-            }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                expectedName = "makerom-linux";
+                expectedName = "makerom";
             }
             else
             {
-                expectedName = "makerom";
+                expectedName = null; // macOS not supported
             }
             
             // Since GetMakeromPlatformBinaryName is internal, we can't test it directly
             // But we can verify the logic is sound
-            Assert.False(string.IsNullOrEmpty(expectedName));
-            Assert.StartsWith("makerom", expectedName);
+            if (expectedName != null)
+            {
+                Assert.False(string.IsNullOrEmpty(expectedName));
+                Assert.StartsWith("makerom", expectedName);
+            }
         }
     }
 }

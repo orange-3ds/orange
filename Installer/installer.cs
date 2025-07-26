@@ -293,42 +293,33 @@ namespace Installer
         {
             try
             {
-                Console.WriteLine("Fetching latest makerom release information from GitHub...");
+                // Check if platform is supported
+                string binaryName = GetMakeromPlatformBinaryName();
+                if (string.IsNullOrEmpty(binaryName))
+                {
+                    Console.WriteLine("Warning: makerom is not supported on macOS. Skipping makerom installation.");
+                    return string.Empty;
+                }
+
+                Console.WriteLine($"Downloading makerom binary: {binaryName}");
                 
                 using (var httpClient = new HttpClient())
                 {
                     httpClient.DefaultRequestHeaders.Add("User-Agent", "Orange-Installer/1.0");
                     
-                    // Get latest release info from devkitPro/3dstools
-                    string apiUrl = "https://api.github.com/repos/devkitpro/3dstools/releases/latest";
-                    string responseJson = await httpClient.GetStringAsync(apiUrl);
-                    var releaseInfo = System.Text.Json.Nodes.JsonNode.Parse(responseJson);
-                    var assets = releaseInfo?["assets"]?.AsArray();
-                    if (assets == null)
+                    // Direct download URLs from orange.collinsoftware.dev
+                    string downloadUrl;
+                    if (IsWindows())
                     {
-                        throw new Exception("No assets found in makerom release");
+                        downloadUrl = "https://orange.collinsoftware.dev/makerom/makerom.exe";
                     }
-                    
-                    // Determine the correct binary name for the platform
-                    string binaryName = GetMakeromPlatformBinaryName();
-                    Console.WriteLine($"Looking for makerom binary: {binaryName}");
-                    
-                    // Find the correct asset
-                    string downloadUrl = "";
-                    foreach (var asset in assets)
+                    else if (IsLinux())
                     {
-                        var name = asset?["name"]?.ToString() ?? "";
-                        var url = asset?["browser_download_url"]?.ToString() ?? "";
-                        if (name.Equals(binaryName, StringComparison.OrdinalIgnoreCase))
-                        {
-                            downloadUrl = url;
-                            break;
-                        }
+                        downloadUrl = "https://orange.collinsoftware.dev/makerom/makerom";
                     }
-                    
-                    if (string.IsNullOrEmpty(downloadUrl))
+                    else
                     {
-                        throw new Exception($"Makerom binary '{binaryName}' not found in release assets");
+                        return string.Empty; // Should not reach here due to earlier check
                     }
                     
                     Console.WriteLine($"Downloading makerom from: {downloadUrl}");
@@ -337,11 +328,7 @@ namespace Installer
                     byte[] binaryData = await httpClient.GetByteArrayAsync(downloadUrl);
                     
                     // Save to temporary file
-                    string tempFileName;
-                    if (IsWindows())
-                        tempFileName = binaryName;
-                    else
-                        tempFileName = "makerom";
+                    string tempFileName = binaryName;
                     string tempPath = Path.Combine(Path.GetTempPath(), tempFileName);
                     await File.WriteAllBytesAsync(tempPath, binaryData);
                     Console.WriteLine($"Downloaded makerom binary to: {tempPath}");
@@ -381,17 +368,13 @@ namespace Installer
             {
                 return "makerom.exe";
             }
-            else if (IsMacOS())
-            {
-                return "makerom-macos";
-            }
             else if (IsLinux())
             {
-                return "makerom-linux";
+                return "makerom";
             }
             else
             {
-                return "makerom";
+                return null; // macOS not supported
             }
         }
 
