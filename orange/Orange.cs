@@ -221,7 +221,7 @@ Commands:
                 return;
             }
 
-            Utils.DownloadFileAsync(templateUrl, "3ds-template.zip").Wait();
+            OrangeLib.Utils.DownloadFileAsync(templateUrl, "3ds-template.zip").Wait();
             ExtractTemplateZip("3ds-template.zip", rootFolder);
             if (File.Exists("3ds-template.zip"))
             {
