@@ -1,6 +1,7 @@
 ﻿using OrangeLib;
 using OrangeLib.Info;
 using System.IO.Compression;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Orange
 {
@@ -13,7 +14,8 @@ Commands:
     - init (app/library)
     - sync
     - build
-    - add (library path) ";
+    - add (library path)
+    - stream (-a 3DS Ip address";
         static readonly string _version = "v1.0.2";
         static readonly string _help = V;
         static void Main(string[] args)
@@ -110,7 +112,7 @@ Commands:
             if (File.Exists("library.cfg"))
             {
                 Information info = libraryinfo.LoadCfg("library.cfg");
-                library.CreateLibrary(info);
+                Library.CreateLibrary(info);
                 Console.WriteLine("Successfully built library!");
                 return;
             }
@@ -152,6 +154,10 @@ Commands:
                 OrangeLib.Net.Internet.GetLibrary(dep).GetAwaiter().GetResult();
                 Console.WriteLine($"Installed {dep}");
             }
+        }
+        static public void Stream(string[] args)
+        {
+
         }
         private static void ShowHelp()
         {
