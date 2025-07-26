@@ -426,7 +426,8 @@ namespace Installer
             }
             else
             {
-                throw new NotSupportedException("makerom is not supported on macOS.");
+                // Return an empty string to indicate unsupported platforms
+                return string.Empty;
             }
         }
 
