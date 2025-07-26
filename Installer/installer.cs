@@ -20,6 +20,12 @@ namespace Installer
 
         static void Main(string[] args)
         {
+            if (args.Length > 0 && (args[0] == "--help" || args[0] == "-h"))
+            {
+                ShowHelp();
+                return;
+            }
+            
             if (!IsRunningAsAdministratorOrRoot())
             {
                 Console.Error.WriteLine("Error: Installer must be run as administrator/root to install to system directories.");
@@ -38,12 +44,6 @@ namespace Installer
             Console.WriteLine($"Orange Library Manager Installer v{Version}");
             Console.WriteLine("==========================================");
             
-            if (args.Length > 0 && (args[0] == "--help" || args[0] == "-h"))
-            {
-                ShowHelp();
-                return;
-            }
-            
             if (args.Length > 0 && (args[0] == "--uninstall" || args[0] == "-u"))
             {
                 UninstallOrange();
@@ -58,9 +58,9 @@ namespace Installer
             Console.WriteLine("Usage: Installer [options]");
             Console.WriteLine("Options:");
             Console.WriteLine("  --help, -h        Show this help message");
-            Console.WriteLine("  --uninstall, -u   Uninstall Orange");
+            Console.WriteLine("  --uninstall, -u   Uninstall Orange and makerom");
             Console.WriteLine();
-            Console.WriteLine("Default behavior (no options): Install Orange");
+            Console.WriteLine("Default behavior (no options): Install Orange and makerom");
         }
 
         static async Task InstallOrangeAsync()
@@ -80,6 +80,17 @@ namespace Installer
 
                 Console.WriteLine($"Downloaded Orange binary: {orangeExePath}");
 
+                // Download makerom binary from GitHub releases
+                string makeromExePath = await DownloadMakeromBinaryAsync();
+                if (string.IsNullOrEmpty(makeromExePath))
+                {
+                    await Console.Error.WriteLineAsync("Warning: Failed to download makerom binary. Continuing with Orange installation only.");
+                }
+                else
+                {
+                    Console.WriteLine($"Downloaded makerom binary: {makeromExePath}");
+                }
+
                 // Get installation directory
                 string installDir = GetInstallDirectory();
                 Console.WriteLine($"Installing to: {installDir}");
@@ -92,23 +103,41 @@ namespace Installer
                 }
 
                 // Copy Orange executable to installation directory
-                string targetExePath = Path.Combine(installDir, Path.GetFileName(orangeExePath));
-                File.Copy(orangeExePath, targetExePath, true);
+                string targetOrangeExePath = Path.Combine(installDir, Path.GetFileName(orangeExePath));
+                File.Copy(orangeExePath, targetOrangeExePath, true);
                 Console.WriteLine("Copied Orange executable.");
 
-                // Make executable on Unix systems
+                // Copy makerom executable to installation directory if downloaded successfully
+                if (!string.IsNullOrEmpty(makeromExePath))
+                {
+                    string targetMakeromExePath = Path.Combine(installDir, Path.GetFileName(makeromExePath));
+                    File.Copy(makeromExePath, targetMakeromExePath, true);
+                    Console.WriteLine("Copied makerom executable.");
+
+                    // Make makerom executable on Unix systems
+                    if (!IsWindows())
+                    {
+                        MakeExecutable(targetMakeromExePath);
+                    }
+                }
+
+                // Make Orange executable on Unix systems
                 if (!IsWindows())
                 {
-                    MakeExecutable(targetExePath);
+                    MakeExecutable(targetOrangeExePath);
                 }
 
                 // Add to PATH
                 AddToPath(installDir);
 
-                // Clean up downloaded file
+                // Clean up downloaded files
                 try
                 {
                     File.Delete(orangeExePath);
+                    if (!string.IsNullOrEmpty(makeromExePath))
+                    {
+                        File.Delete(makeromExePath);
+                    }
                 }
                 catch
                 {
@@ -116,6 +145,10 @@ namespace Installer
                 }
 
                 Console.WriteLine("✓ Orange has been installed successfully!");
+                if (!string.IsNullOrEmpty(makeromExePath))
+                {
+                    Console.WriteLine("✓ makerom has been installed successfully!");
+                }
                 
                 if (!IsWindows())
                 {
@@ -148,6 +181,14 @@ namespace Installer
                         Console.WriteLine("Removed Orange executable.");
                     }
 
+                    // Remove makerom files
+                    string makeromExePath = Path.Combine(installDir, IsWindows() ? "makerom.exe" : "makerom");
+                    if (File.Exists(makeromExePath))
+                    {
+                        File.Delete(makeromExePath);
+                        Console.WriteLine("Removed makerom executable.");
+                    }
+
                     // Try to remove directory if empty
                     try
                     {
@@ -168,6 +209,7 @@ namespace Installer
 
                 Console.WriteLine();
                 Console.WriteLine("✓ Orange has been uninstalled successfully!");
+                Console.WriteLine("✓ makerom has been uninstalled successfully!");
                 
                 if (!IsWindows())
                 {
@@ -247,6 +289,72 @@ namespace Installer
             }
         }
         
+        static async Task<string> DownloadMakeromBinaryAsync()
+        {
+            try
+            {
+                Console.WriteLine("Fetching latest makerom release information from GitHub...");
+                
+                using (var httpClient = new HttpClient())
+                {
+                    httpClient.DefaultRequestHeaders.Add("User-Agent", "Orange-Installer/1.0");
+                    
+                    // Get latest release info from devkitPro/3dstools
+                    string apiUrl = "https://api.github.com/repos/devkitpro/3dstools/releases/latest";
+                    string responseJson = await httpClient.GetStringAsync(apiUrl);
+                    var releaseInfo = System.Text.Json.Nodes.JsonNode.Parse(responseJson);
+                    var assets = releaseInfo?["assets"]?.AsArray();
+                    if (assets == null)
+                    {
+                        throw new Exception("No assets found in makerom release");
+                    }
+                    
+                    // Determine the correct binary name for the platform
+                    string binaryName = GetMakeromPlatformBinaryName();
+                    Console.WriteLine($"Looking for makerom binary: {binaryName}");
+                    
+                    // Find the correct asset
+                    string downloadUrl = "";
+                    foreach (var asset in assets)
+                    {
+                        var name = asset?["name"]?.ToString() ?? "";
+                        var url = asset?["browser_download_url"]?.ToString() ?? "";
+                        if (name.Equals(binaryName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            downloadUrl = url;
+                            break;
+                        }
+                    }
+                    
+                    if (string.IsNullOrEmpty(downloadUrl))
+                    {
+                        throw new Exception($"Makerom binary '{binaryName}' not found in release assets");
+                    }
+                    
+                    Console.WriteLine($"Downloading makerom from: {downloadUrl}");
+                    
+                    // Download the binary
+                    byte[] binaryData = await httpClient.GetByteArrayAsync(downloadUrl);
+                    
+                    // Save to temporary file
+                    string tempFileName;
+                    if (IsWindows())
+                        tempFileName = binaryName;
+                    else
+                        tempFileName = "makerom";
+                    string tempPath = Path.Combine(Path.GetTempPath(), tempFileName);
+                    await File.WriteAllBytesAsync(tempPath, binaryData);
+                    Console.WriteLine($"Downloaded makerom binary to: {tempPath}");
+                    return tempPath;
+                }
+            }
+            catch (Exception ex)
+            {
+                await Console.Error.WriteLineAsync($"Failed to download makerom binary: {ex.Message}");
+                return string.Empty;
+            }
+        }
+        
         static string GetPlatformBinaryName()
         {
             if (IsWindows())
@@ -264,6 +372,26 @@ namespace Installer
             else
             {
                 return "orange";
+            }
+        }
+
+        static string GetMakeromPlatformBinaryName()
+        {
+            if (IsWindows())
+            {
+                return "makerom.exe";
+            }
+            else if (IsMacOS())
+            {
+                return "makerom-macos";
+            }
+            else if (IsLinux())
+            {
+                return "makerom-linux";
+            }
+            else
+            {
+                return "makerom";
             }
         }
 
