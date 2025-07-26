@@ -15,7 +15,6 @@ namespace OrangeLib
             {
                 try
                 {
-                    //bool success = CollinExecute.Shell.SystemCommand($"3dslink -a {ip} -r {retrys}", false, true);
                     bool success = CollinExecute.Shell.SystemCommand($"3dslink -a {ip} -r {retrys}", false, true);
                 }
                 catch { 
