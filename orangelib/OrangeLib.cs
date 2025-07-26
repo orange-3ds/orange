@@ -5,11 +5,29 @@ using System.IO.Compression;
 using System.Runtime.InteropServices;
 namespace OrangeLib
 {
+    public static class Streaming
+    {
+        public static bool Stream3dsxTo3ds(string ip, int retrys)
+        {
+            int i = 0;
+            while (i > retrys)
+            {
+                try
+                {
+                    bool success = CollinExecute.Shell.SystemCommand($"3dslink -a {ip} -r {retrys}", false, true);
+                }
+                catch { 
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
     public static class Utils
     {
         public static bool IsWindows() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         public static bool IsLinux() => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-// Only for specific use.
+        // Only for specific use.
         public static bool ExecuteShellCommand(string command)
         {
             try
@@ -25,7 +43,7 @@ namespace OrangeLib
                     process.StartInfo.FileName = "/bin/bash";
                     process.StartInfo.Arguments = $"-c \"{command}\"";
                 }
-                
+
                 process.StartInfo.UseShellExecute = false;
                 process.StartInfo.CreateNoWindow = true;
                 process.Start();
@@ -100,7 +118,7 @@ namespace OrangeLib
             }
         }
     }
-    static public class library
+    static public class Library
     {
         public static void CreateLibrary(Information libraryinfo)
         {

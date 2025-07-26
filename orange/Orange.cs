@@ -1,6 +1,7 @@
 ﻿using OrangeLib;
 using OrangeLib.Info;
 using System.IO.Compression;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Orange
 {
@@ -10,10 +11,11 @@ namespace Orange
     {
         private const string V = @"Usage: orange [command] [options]
 Commands:
-    - init (app/library)
+    - init [app/library]
     - sync
     - build
-    - add (library path) ";
+    - add [library name]
+    - stream [3DS Ip address] (-r --retries Number of times to retry the connction)";
         static readonly string _version = "v1.0.2";
         static readonly string _help = V;
         static void Main(string[] args)
@@ -33,6 +35,10 @@ Commands:
             else if (args[0] == "upload")
             {
                 Console.WriteLine("Ha! you found a removed command. go to the github to upload a library...");
+            }
+            else if (args[0] == "stream")
+            {
+                Stream(args);
             }
             else if (args[0] == "init")
             {
@@ -110,7 +116,7 @@ Commands:
             if (File.Exists("library.cfg"))
             {
                 Information info = libraryinfo.LoadCfg("library.cfg");
-                library.CreateLibrary(info);
+                Library.CreateLibrary(info);
                 Console.WriteLine("Successfully built library!");
                 return;
             }
@@ -151,6 +157,34 @@ Commands:
             {
                 OrangeLib.Net.Internet.GetLibrary(dep).GetAwaiter().GetResult();
                 Console.WriteLine($"Installed {dep}");
+            }
+        }
+        static public void Stream(string[] args)
+        {
+            if (args.Length < 2)
+            {
+                Console.WriteLine("Usage: orange stream [3DS Ip address] (-r --retries Number of times to retry the connction)");
+                return;
+            }
+            string ip = args[1];
+            int retries = 1;
+            // Parse optional retries argument
+            for (int i = 2; i < args.Length - 1; i++)
+            {
+                if ((args[i] == "-r" || args[i] == "--retries") && int.TryParse(args[i + 1], out int parsedRetries))
+                {
+                    retries = parsedRetries;
+                    break;
+                }
+            }
+            bool success = OrangeLib.Streaming.Stream3dsxTo3ds(ip, retries);
+            if (success)
+            {
+                Console.WriteLine($"Successfully streamed to 3DS at {ip}.");
+            }
+            else
+            {
+                Console.WriteLine($"Failed to stream to 3DS at {ip} after {retries} attempt(s).");
             }
         }
         private static void ShowHelp()

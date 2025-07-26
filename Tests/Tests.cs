@@ -475,7 +475,7 @@ Author: Test Author
         {
             // Test with nonexistent zip file
             // This should not throw an exception but handle it gracefully
-            library.InstallLibrary("nonexistent.zip");
+            Library.InstallLibrary("nonexistent.zip");
             // If we get here, the method handled the error gracefully
             Assert.True(true);
         }
@@ -507,7 +507,7 @@ Author: Test Author
                     ReadmeContents = "Test README"
                 };
                 
-                library.CreateLibrary(libraryInfo);
+                Library.CreateLibrary(libraryInfo);
                 
                 // Verify library.zip was created
                 Assert.True(File.Exists("library.zip"));

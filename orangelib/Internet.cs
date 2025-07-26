@@ -54,7 +54,7 @@ namespace OrangeLib.Net
                     await Console.Error.WriteLineAsync($"Downloaded file is not a valid ZIP archive: {tempFilePath}").ConfigureAwait(false);
                     return;
                 }
-                library.InstallLibrary(tempFilePath);
+                Library.InstallLibrary(tempFilePath);
             }
             catch (Exception ex)
             {
