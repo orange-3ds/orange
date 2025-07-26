@@ -8,7 +8,6 @@ namespace OrangeLib
     public static class Utils
     {
         public static bool IsWindows() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        public static bool IsMacOS() => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
         public static bool IsLinux() => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
 // Only for specific use.
         public static bool ExecuteShellCommand(string command)
