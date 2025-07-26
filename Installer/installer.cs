@@ -239,7 +239,10 @@ namespace Installer
 
                 Console.WriteLine();
                 Console.WriteLine("✓ Orange has been uninstalled successfully!");
-                Console.WriteLine("✓ makerom has been uninstalled successfully!");
+                if (makeromRemoved)
+                {
+                    Console.WriteLine("✓ makerom has been uninstalled successfully!");
+                }
                 
                 if (!IsWindows())
                 {
