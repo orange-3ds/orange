@@ -6,6 +6,7 @@ using System.Security.Principal; // For Windows admin check
 using System.Text.Json;
 using System.Threading.Tasks;
 using OrangeLib;
+using CollinExecute;
 
 namespace Installer
 {
@@ -49,7 +50,25 @@ namespace Installer
                 return;
             }
 
-            InstallOrangeAsync().Wait();
+            // Parse version argument
+            string? targetVersion = null;
+            if (args.Length >= 2 && (args[0] == "--version" || args[0] == "-v"))
+            {
+                targetVersion = args[1];
+                if (string.IsNullOrWhiteSpace(targetVersion))
+                {
+                    Console.Error.WriteLine("Error: Version argument cannot be empty.");
+                    Environment.Exit(1);
+                    return;
+                }
+                // Ensure version starts with 'v' for consistency with GitHub releases
+                if (!targetVersion.StartsWith("v"))
+                {
+                    targetVersion = "v" + targetVersion;
+                }
+            }
+
+            InstallOrangeAsync(targetVersion).Wait();
         }
 
         static void ShowHelp()
@@ -57,19 +76,31 @@ namespace Installer
             Console.WriteLine("Usage: Installer [options]");
             Console.WriteLine("Options:");
             Console.WriteLine("  --help, -h        Show this help message");
-            Console.WriteLine("  --uninstall, -u   Uninstall Orange and makerom");
+            Console.WriteLine("  --uninstall, -u   Uninstall Orange");
+            Console.WriteLine("  --version, -v     Specify version to install (e.g., v1.0.0)");
             Console.WriteLine();
-            Console.WriteLine("Default behavior (no options): Install Orange and makerom");
+            Console.WriteLine("Default behavior (no options): Install latest Orange version");
+            Console.WriteLine();
+            Console.WriteLine("Examples:");
+            Console.WriteLine("  Installer                    # Install latest version");
+            Console.WriteLine("  Installer --version v1.0.2   # Install specific version");
         }
 
-        static async Task InstallOrangeAsync()
+        static async Task InstallOrangeAsync(string? targetVersion = null)
         {
             try
             {
-                Console.WriteLine("Starting Orange installation...");
+                if (targetVersion != null)
+                {
+                    Console.WriteLine($"Starting Orange installation for version {targetVersion}...");
+                }
+                else
+                {
+                    Console.WriteLine("Starting Orange installation (latest version)...");
+                }
                 
                 // Download Orange binary from GitHub releases
-                string orangeExePath = await DownloadOrangeBinaryAsync();
+                string orangeExePath = await DownloadOrangeBinaryAsync(targetVersion);
                 if (string.IsNullOrEmpty(orangeExePath))
                 {
                     await Console.Error.WriteLineAsync("Error: Failed to download Orange binary.");
@@ -222,19 +253,45 @@ namespace Installer
             }
         }
 
-        static async Task<string> DownloadOrangeBinaryAsync()
+        static async Task<string> DownloadOrangeBinaryAsync(string? targetVersion = null)
         {
             try
             {
-                Console.WriteLine("Fetching latest release information from GitHub...");
+                if (targetVersion != null)
+                {
+                    Console.WriteLine($"Fetching release information for version {targetVersion} from GitHub...");
+                }
+                else
+                {
+                    Console.WriteLine("Fetching latest release information from GitHub...");
+                }
                 
                 using (var httpClient = new HttpClient())
                 {
                     httpClient.DefaultRequestHeaders.Add("User-Agent", "Orange-Installer/1.0");
                     
-                    // Get latest release info
-                    string apiUrl = "https://api.github.com/repos/orange-3ds/orange/releases/latest";
-                    string responseJson = await httpClient.GetStringAsync(apiUrl);
+                    // Get release info - either latest or specific version
+                    string apiUrl = targetVersion != null
+                        ? $"https://api.github.com/repos/orange-3ds/orange/releases/tags/{targetVersion}"
+                        : "https://api.github.com/repos/orange-3ds/orange/releases/latest";
+                    
+                    string responseJson;
+                    try
+                    {
+                        responseJson = await httpClient.GetStringAsync(apiUrl);
+                    }
+                    catch (HttpRequestException ex)
+                    {
+                        if (targetVersion != null)
+                        {
+                            throw new Exception($"Version '{targetVersion}' not found. Please check that this version exists in the releases.");
+                        }
+                        else
+                        {
+                            throw new Exception($"Failed to fetch latest release information: {ex.Message}");
+                        }
+                    }
+                    
                     var releaseInfo = System.Text.Json.Nodes.JsonNode.Parse(responseJson);
                     var assets = releaseInfo?["assets"]?.AsArray();
                     if (assets == null)
@@ -389,12 +446,11 @@ namespace Installer
         static void MakeExecutable(string filePath)
         {
             // Make file executable on Unix systems using CollinExecute when available
-            // For now, falling back to Utils.ExecuteShellCommand
             string chmodCommand = $"chmod +x \"{filePath}\"";
             
     
             
-            bool success = Utils.ExecuteShellCommand(chmodCommand);
+            bool success = CollinExecute.Shell.SystemCommand(chmodCommand);
             if (success)
             {
                 Console.WriteLine("Made Orange executable.");
@@ -425,7 +481,7 @@ namespace Installer
                 string command = $"powershell -Command \"$env:PATH += ';{directory}'; [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'User')\"";
   
                 
-                bool success = Utils.ExecuteShellCommand(command);
+                bool success = CollinExecute.Shell.SystemCommand(command);
                 if (success)
                 {
                     Console.WriteLine("Added to Windows PATH.");
@@ -520,7 +576,7 @@ namespace Installer
                 string command = $"powershell -Command \"$path = [Environment]::GetEnvironmentVariable('PATH', 'User'); $newPath = $path -replace [regex]::Escape(';{directory}'), ''; [Environment]::SetEnvironmentVariable('PATH', $newPath, 'User')\"";
                 
                 
-                bool success = Utils.ExecuteShellCommand(command);
+                bool success = CollinExecute.Shell.SystemCommand(command);
                 if (success)
                 {
                     Console.WriteLine("Removed from Windows PATH.");

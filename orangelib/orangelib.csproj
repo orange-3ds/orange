@@ -7,9 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CollinExecute" Version="1.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="CollinExecute" Version="1.0.0" />
   </ItemGroup>
+
 
   <ItemGroup>
     <ProjectReference Include="..\configlibnet\configlibnet.csproj" />

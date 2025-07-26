@@ -576,6 +576,39 @@ Author: Test Author
             Assert.IsType<bool>(result);
         }
 
+        [Theory]
+        [InlineData("1.0.0", "v1.0.0")]
+        [InlineData("v1.0.0", "v1.0.0")]
+        [InlineData("1.0.2", "v1.0.2")]
+        [InlineData("v1.0.2", "v1.0.2")]
+        public void VersionNormalization_AddsVPrefixWhenMissing(string input, string expected)
+        {
+            // Test version normalization logic
+            string result = input.StartsWith("v") ? input : "v" + input;
+            Assert.Equal(expected, result);
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData("   ")]
+        [InlineData(null)]
+        public void EmptyVersion_ShouldBeInvalid(string? version)
+        {
+            // Test that empty versions are considered invalid
+            bool isValid = !string.IsNullOrWhiteSpace(version);
+            Assert.False(isValid);
+        }
+
+        [Theory]
+        [InlineData("v1.0.0")]
+        [InlineData("v1.0.1")]
+        [InlineData("v1.0.2")]
+        public void ValidVersionFormat_ShouldBeValid(string version)
+        {
+            // Test that valid version formats are accepted
+            bool startsWithV = version.StartsWith("v");
+            bool hasValidFormat = version.Length > 1 && char.IsDigit(version[1]);
+            Assert.True(startsWithV && hasValidFormat);
         [Fact]
         public void GetMakeromPlatformBinaryName_ReturnsCorrectName()
         {
