@@ -626,7 +626,7 @@ Author: Test Author
             }
             else
             {
-                expectedName = null; // macOS not supported
+                expectedName = String.Empty; // macOS not supported
             }
 
             // Since GetMakeromPlatformBinaryName is internal, we can't test it directly
