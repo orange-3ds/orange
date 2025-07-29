@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Runtime.InteropServices;
@@ -6,7 +7,7 @@ using System.Security.Principal; // For Windows admin check
 using System.Text.Json;
 using System.Threading.Tasks;
 using OrangeLib;
-using CollinExecute;
+
 
 namespace Installer
 {
@@ -14,6 +15,34 @@ namespace Installer
     {
         public static bool IsWindows() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         public static bool IsLinux() => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+        
+        // Helper method to execute shell commands, similar to Utils.ExecuteShellCommand
+        private static bool ExecuteShellCommand(string command)
+        {
+            try
+            {
+                var process = new Process();
+                if (IsWindows())
+                {
+                    process.StartInfo.FileName = "cmd.exe";
+                    process.StartInfo.Arguments = $"/c {command}";
+                }
+                else
+                {
+                    process.StartInfo.FileName = "/bin/bash";
+                    process.StartInfo.Arguments = $"-c \"{command}\"";
+                }
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.CreateNoWindow = true;
+                process.Start();
+                process.WaitForExit();
+                return process.ExitCode == 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
         
         
         private const string Version = "1.1.0";
@@ -123,11 +152,11 @@ namespace Installer
                 // Download ffmeg from package managers.
                 if (Program.IsWindows())
                 {
-                    CollinExecute.Shell.SystemCommand("winget install ffmpeg");
+                    ExecuteShellCommand("winget install ffmpeg");
                 }
                 else if (Program.IsLinux())
                 {
-                    CollinExecute.Shell.SystemCommand("sudo apt install ffmpeg");
+                    ExecuteShellCommand("sudo apt install ffmpeg");
                 }
                 else
                 {
@@ -467,7 +496,7 @@ namespace Installer
             
     
             
-            bool success = CollinExecute.Shell.SystemCommand(chmodCommand);
+            bool success = ExecuteShellCommand(chmodCommand);
             if (success)
             {
                 Console.WriteLine("Made Orange executable.");
@@ -498,7 +527,7 @@ namespace Installer
                 string command = $"powershell -Command \"$env:PATH += ';{directory}'; [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'User')\"";
   
                 
-                bool success = CollinExecute.Shell.SystemCommand(command);
+                bool success = ExecuteShellCommand(command);
                 if (success)
                 {
                     Console.WriteLine("Added to Windows PATH.");
@@ -593,7 +622,7 @@ namespace Installer
                 string command = $"powershell -Command \"$path = [Environment]::GetEnvironmentVariable('PATH', 'User'); $newPath = $path -replace [regex]::Escape(';{directory}'), ''; [Environment]::SetEnvironmentVariable('PATH', $newPath, 'User')\"";
                 
                 
-                bool success = CollinExecute.Shell.SystemCommand(command);
+                bool success = ExecuteShellCommand(command);
                 if (success)
                 {
                     Console.WriteLine("Removed from Windows PATH.");
