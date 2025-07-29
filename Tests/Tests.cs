@@ -638,4 +638,24 @@ Author: Test Author
             }
         }
     }
+
+    public class CiaBuilderTests
+    {
+        [Fact]
+        public void CiaBuilder_Constructor_CreatesInstance()
+        {
+            // Test that CiaBuilder can be instantiated with required parameters
+            var ciaBuilder = new CiaBuilder(
+                title: "TestApp",
+                description: "Test Description",
+                author: "Test Author",
+                largeIconPath: "large_icon.png",
+                smallIconPath: "small_icon.png",
+                bannerPath: "banner.png",
+                bannerAudioPath: "banner.wav"
+            );
+
+            Assert.NotNull(ciaBuilder);
+        }
+    }
 }
