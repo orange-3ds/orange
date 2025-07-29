@@ -13,6 +13,7 @@
 
 
   <ItemGroup>
+    <ProjectReference Include="..\Bannertool.net\Bannertool.net.csproj" />
     <ProjectReference Include="..\configlibnet\configlibnet.csproj" />
   </ItemGroup>
 

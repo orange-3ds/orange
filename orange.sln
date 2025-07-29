@@ -3,15 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36221.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orange", "orange\orange.csproj", "{3E790902-ECF1-494C-8975-8F6672388DF8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "orange", "orange\orange.csproj", "{3E790902-ECF1-494C-8975-8F6672388DF8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrangeLib", "orangelib\orangelib.csproj", "{0471B599-AEFF-40F0-A644-F4C48F39635A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "orangelib", "orangelib\orangelib.csproj", "{0471B599-AEFF-40F0-A644-F4C48F39635A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Installer", "Installer\Installer.csproj", "{0E6460AB-625C-4FFD-8C68-2EC95F5BE3DE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "configlibnet", "configlibnet\configlibnet.csproj", "{09EF85D3-C0CF-472D-A477-96358C8CD979}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{3954CE22-DA5B-441A-896A-6B4E16F753A0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bannertool.net", "Bannertool.net\Bannertool.net.csproj", "{6FA68625-0624-C9BA-5FBD-C14D82E9E191}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{3954CE22-DA5B-441A-896A-6B4E16F753A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3954CE22-DA5B-441A-896A-6B4E16F753A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3954CE22-DA5B-441A-896A-6B4E16F753A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6FA68625-0624-C9BA-5FBD-C14D82E9E191}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6FA68625-0624-C9BA-5FBD-C14D82E9E191}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6FA68625-0624-C9BA-5FBD-C14D82E9E191}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6FA68625-0624-C9BA-5FBD-C14D82E9E191}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

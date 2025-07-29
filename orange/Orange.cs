@@ -132,6 +132,37 @@ Commands:
                 Directory.CreateDirectory("build");
                 File.Copy("app.cfg", "build/app.cfg");
                 bool success = CollinExecute.Shell.SystemCommand("make");
+                if (Directory.Exists(".orange") || args[2] == "cia")
+                {
+                    // Example usage:
+                    string originalAudio = "assets/banner_audio.wav";
+                    string convertedAudio = ".orange/banner_audio_converted.wav";
+
+                    bool conversionSuccess = OrangeLib.AudioConverter.ConvertWavTo3dsFormatAsync(originalAudio, convertedAudio).GetAwaiter().GetResult();
+
+                    if (conversionSuccess)
+                    {
+                        // Now use the 'convertedAudio' path when building the CIA
+                        var cia = new Cia(info.Title, info.Description, info.Author, "assets/icon-large.png", "assets/icon-small.png", "assets/banner.png", convertedAudio);
+                        cia.GenerateCia().Wait();
+                        if (File.Exists($"{info.Title}.cia"))
+                        {
+                            Console.WriteLine($"Successfully built {info.Title}.cia!");
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine("Failed to build CIA file.");
+                            return;
+                        }
+
+                    }
+                    else
+                    {
+                        Console.Error.WriteLine("Failed to convert audio, aborting CIA creation.");
+                        return;
+                    }
+
+                }
                 if (!success)
                 {
                     Console.Error.WriteLine("Build Failed.");
@@ -199,7 +230,7 @@ Commands:
                 Console.WriteLine("Usage: orange init <app/library>");
                 return;
             }
-            
+
             string type = args[1];
             string templateUrl = String.Empty;
             string rootFolder = String.Empty;
@@ -239,12 +270,12 @@ Commands:
                     {
                         string intendedDirectory = Path.GetFullPath(Directory.GetCurrentDirectory());
                         string destinationPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), entry.FullName.Substring(rootFolder.Length)));
-                        
+
                         if (!destinationPath.StartsWith(intendedDirectory, StringComparison.Ordinal))
                         {
                             throw new IOException($"Entry is outside of the target directory: {entry.FullName}");
                         }
-                        
+
                         Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
                         entry.ExtractToFile(destinationPath, true);
                     }

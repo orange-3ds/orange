@@ -1,36 +1,104 @@
 ﻿namespace OrangeLib
 {
 
-    public class Cia(string title, string author, string iconpath, string bannerpath)
+    public class Cia(string title, string description, string author, string largeiconpath, string smalliconpath, string bannerpath, string banneraudiopath)
     {
-        void CreateCfa()
+        public async Task<bool> GenerateCia()
         {
+            // Check if build files are present
+            if (!File.Exists($"{title}.elf"))
+            {
+                Console.WriteLine("ELF file not found. Please build the project first.");
+                return false;
+            }
+            if (!Directory.Exists(".orange"))
+            {
+                Directory.CreateDirectory(".orange");
+            }
+            byte[] bannercontents = await Bannertool.Net.BannerBuilder.CreateBannerAsync(
+                bannerpath,
+                banneraudiopath
+            );
+            await File.WriteAllBytesAsync(".orange/banner.bnr", bannercontents);
+            byte[] iconcontents = await Bannertool.Net.SmdhBuilder.CreateSmdhAsync(
+                largeiconpath,
+                smalliconpath,
+                title,
+                description,
+                author
+            );
+            await File.WriteAllBytesAsync(".orange/icon.icn", iconcontents);
+            bool buildSuccess = BuildCia();
+
+            return true;
+        }
+        bool BuildCia()
+        {
+            bool cfa, cxi, cia;
+            string rsfContent = RsfHelper.GenerateRsf(title);
+            File.WriteAllText(".orange/makerom.rsf", rsfContent);
+            cfa = CreateCfa();
+            if (!cfa)
+            {
+                Console.WriteLine("Failed to create CFA file.");
+                return false;
+            }
+            cxi = CreateCxi();
+            if (!cxi)
+            {
+                Console.WriteLine("Failed to create CXI file.");
+                return false;
+            }
+            cia = CreateCia();
+            if (!cxi)
+            {
+                Console.WriteLine("Failed to create CIA file.");
+                return false;
+            }
+            Console.WriteLine("Successfully created CIA file.");
+            return true;
+        }
+
+        bool CreateCfa()
+        {
+            if (!File.Exists(".orange/makerom.rsf"))
+            {
+                string rsfContent = RsfHelper.GenerateRsf(title);
+                File.WriteAllText(".orange/makerom.rsf", rsfContent);
+            }
             string command = $"makerom -o .orange/orange.cfa -rsf .orange/makerom.rsf -target t";
-            CollinExecute.Shell.SystemCommand(command);
+            bool success = CollinExecute.Shell.SystemCommand(command);
+            return success;
         }
-        void CreateCxi()
+        bool CreateCxi()
         {
-            string command = $"makerom -o .orange/orange.cxi -elf {title}elf -icon .orange/gfx/icon.icn -banner {bannerpath} -target t";
-            CollinExecute.Shell.SystemCommand(command);
+            if (!File.Exists(".orange/makerom.rsf"))
+            {
+                string rsfContent = RsfHelper.GenerateRsf(title);
+                File.WriteAllText(".orange/makerom.rsf", rsfContent);
+            }
+            if (!File.Exists($"{title}.elf"))
+            {
+                return false;
+            }
+            string command = $"makerom -o .orange/orange.cxi -rsf .orange/makerom.rsf -target t -elf {title}.elf -icon .orange/icon.icn -banner .orange/banner.bnr -desc app:4";
+            bool success = CollinExecute.Shell.SystemCommand(command);
+            return success;
         }
-    }
-    static class CiaHelper
-    {
-        public static string GetGeneralArguments(string name)
+        bool CreateCia()
         {
-            return $"-f cia -o {name}.cia";
-        }
-        public static string GetRsfArguments(string rsfPath)
-        {
-            return $"-rsf {rsfPath}";
-        }
-        public static string CryptoArguments()
-        {
-            return "-target t";
-        }
-        public static string NcchArguments(string elfpath, string iconpath, string bannerpath)
-        {
-            return $"-elf {elfpath} ";
+            if (!File.Exists(".orange/makerom.rsf"))
+            {
+                string rsfContent = RsfHelper.GenerateRsf(title);
+                File.WriteAllText(".orange/makerom.rsf", rsfContent);
+            }
+            if (!File.Exists(".orange/orange.cxi") || !File.Exists(".orange/orange.cfa"))
+            {
+                return false;
+            }
+            string command = $"makerom -f cia -o {title}.cia -target t -i .orange/orange.cxi:0:0 -i .orange/orange.cfa:1:1";
+            bool success = CollinExecute.Shell.SystemCommand(command);
+            return success;
         }
     }
     static class RsfHelper
@@ -57,7 +125,7 @@ BasicInfo:
 
 RomFs:
   # Specifies the root path of the read only file system to include in the ROM.
-  #RootPath                : romfs
+  RootPath                : romfs
 
 TitleInfo:
   Category                : Application

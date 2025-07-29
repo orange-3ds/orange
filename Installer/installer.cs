@@ -16,7 +16,7 @@ namespace Installer
         public static bool IsLinux() => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
         
         
-        private const string Version = "1.0.0";
+        private const string Version = "1.1.0";
 
         static void Main(string[] args)
         {
@@ -119,6 +119,19 @@ namespace Installer
                 else
                 {
                     Console.WriteLine($"Downloaded makerom binary: {makeromExePath}");
+                }
+                // Download ffmeg from package managers.
+                if (Program.IsWindows())
+                {
+                    CollinExecute.Shell.SystemCommand("winget install ffmpeg");
+                }
+                else if (Program.IsLinux())
+                {
+                    CollinExecute.Shell.SystemCommand("sudo apt install ffmpeg");
+                }
+                else
+                {
+                    Console.WriteLine("Warning: ffmpeg is not supported on this platform. Please install it manually to build cias.");
                 }
 
                 // Get installation directory
