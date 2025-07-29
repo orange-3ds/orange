@@ -1,14 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="CollinExecute" Version="1.0.0" />
+    <PackageReference Include="NAudio" Version="2.2.1" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.10" />
   </ItemGroup>
 
 
@@ -18,31 +19,5 @@
   </ItemGroup>
 
 
-  <ItemGroup>
-    <Reference Include="Bannertool.net">
-      <HintPath>..\deps\Bannertool.net.dll</HintPath>
-    </Reference>
-    <Reference Include="NAudio">
-      <HintPath>..\deps\NAudio.dll</HintPath>
-    </Reference>
-    <Reference Include="NAudio.Asio">
-      <HintPath>..\deps\NAudio.Asio.dll</HintPath>
-    </Reference>
-    <Reference Include="NAudio.Core">
-      <HintPath>..\deps\NAudio.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="NAudio.Midi">
-      <HintPath>..\deps\NAudio.Midi.dll</HintPath>
-    </Reference>
-    <Reference Include="NAudio.Wasapi">
-      <HintPath>..\deps\NAudio.Wasapi.dll</HintPath>
-    </Reference>
-    <Reference Include="NAudio.WinMM">
-      <HintPath>..\deps\NAudio.WinMM.dll</HintPath>
-    </Reference>
-    <Reference Include="SixLabors.ImageSharp">
-      <HintPath>..\deps\SixLabors.ImageSharp.dll</HintPath>
-    </Reference>
-  </ItemGroup>
 
 </Project>
