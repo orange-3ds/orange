@@ -646,16 +646,22 @@ namespace Installer
         {
             if (IsWindows())
             {
-                using (var identity = WindowsIdentity.GetCurrent())
-                {
-                    var principal = new WindowsPrincipal(identity);
-                    return principal.IsInRole(WindowsBuiltInRole.Administrator);
-                }
+                return IsWindowsAdministrator();
             }
             else
             {
                 // On Unix, UID 0 is root
                 return GetUid() == 0;
+            }
+        }
+
+        [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+        static bool IsWindowsAdministrator()
+        {
+            using (var identity = WindowsIdentity.GetCurrent())
+            {
+                var principal = new WindowsPrincipal(identity);
+                return principal.IsInRole(WindowsBuiltInRole.Administrator);
             }
         }
 
