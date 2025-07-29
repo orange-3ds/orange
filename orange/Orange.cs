@@ -10,12 +10,25 @@ namespace Orange
     static class Program
     {
         private const string V = @"Usage: orange [command] [options]
+
 Commands:
-    - init [app/library]
-    - sync
-    - build
-    - add [library name]
-    - stream [3DS Ip address] (-r --retries Number of times to retry the connction)";
+    init [app/library]    Create a new 3DS app or library project from templates
+    sync                  Download and install all dependencies listed in config
+    build                 Build the current project (app or library)
+    add [library name]    Download and add a library dependency to the project
+    stream [3DS IP] [options]  Stream built 3DSX file to 3DS console
+                              Options: -r, --retries <num>  Number of connection retry attempts
+
+Options:
+    --help, -h           Show this help message
+    --version, -v        Show version information
+
+Examples:
+    orange init app              Create a new 3DS application project
+    orange init library          Create a new 3DS library project
+    orange add mylib             Add 'mylib' library as a dependency
+    orange stream 192.168.1.100  Stream to 3DS at IP 192.168.1.100
+    orange stream 192.168.1.100 --retries 5  Stream with 5 retry attempts";
         static readonly string _version = "v1.0.2";
         static readonly string _help = V;
         static void Main(string[] args)
