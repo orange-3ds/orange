@@ -1,205 +1,214 @@
 ﻿using OrangeLib;
 using OrangeLib.Info;
+using System.IO;
 using System.IO.Compression;
-using CollinExecute;
+using System.Diagnostics;
+using System.Threading.Tasks;
+using System.Linq;
+using System;
 
 namespace Orange
 {
-
-
     static class Program
     {
-        private const string V = @"Usage: orange [command] [options]
+        private const string HelpText = @"Usage: orange [command] (options)
 Commands:
-    - init [app/library]
-    - sync
-    - build
-    - add [library name]
-    - stream [3DS Ip address] (-r --retries Number of times to retry the connction)";
-        static readonly string _version = "v1.0.2";
-        static readonly string _help = V;
-        static void Main(string[] args)
+    init [app/library]        Initializes a new 3DS app or library from a template.
+    sync                      Downloads and installs all dependencies from the config file.
+    build (cia)               Builds the project. Optionally builds a CIA if 'cia' is specified.
+    add [library name]        Adds a new library dependency to your project.
+    stream [ip] (--retries n) Streams the built .3dsx file to a 3DS running a homebrew loader.
+    --help                    Displays this help information.
+    --version                 Displays the tool version.";
+        private const string Version = "v1.0.3"; // Incremented version for refactor
+
+        // Main entry point is now async to allow for top-level await.
+        static async Task Main(string[] args)
         {
-            if (args.Length == 0 || args[0] == "--help")
+            if (args.Length == 0)
             {
                 ShowHelp();
+                return;
             }
-            else if (args[0] == "add")
+
+            var command = args[0].ToLowerInvariant();
+            try
             {
-                Add(args);
+                // Use a cleaner switch statement for command routing.
+                switch (command)
+                {
+                    case "init":
+                        await HandleInitCommandAsync(args);
+                        break;
+                    case "sync":
+                        await HandleSyncCommandAsync(args);
+                        break;
+                    case "build":
+                        await HandleBuildCommandAsync(args);
+                        break;
+                    case "add":
+                        await HandleAddCommandAsync(args);
+                        break;
+                    case "stream":
+                        HandleStreamCommand(args);
+                        break;
+                    case "--version":
+                    case "-v":
+                        Console.WriteLine($"Orange Version: {Version}");
+                        break;
+                    case "--help":
+                        ShowHelp();
+                        break;
+                    default:
+                        LogError($"Unknown command '{command}'. Use --help to view available commands.");
+                        break;
+                }
             }
-            else if (args[0] == "build")
+            catch (Exception ex)
             {
-                Build(args);
-            }
-            else if (args[0] == "upload")
-            {
-                Console.WriteLine("Ha! you found a removed command. go to the github to upload a library...");
-            }
-            else if (args[0] == "stream")
-            {
-                Stream(args);
-            }
-            else if (args[0] == "init")
-            {
-                HandleInitCommand(args);
-            }
-            else if (args[0] == "sync")
-            {
-                Sync(args);
-            }
-            else if (args[0] == "--version" || args[0] == "-v")
-            {
-                Console.WriteLine($"Orange Version: {_version}");
-            }
-            else
-            {
-                Console.WriteLine("Unknown command. Use --help to view help information");
+                LogError($"An unexpected error occurred: {ex.Message}");
+                // For debugging, you might want to uncomment the line below:
+                // Console.WriteLine(ex.StackTrace);
             }
         }
-        static public void Add(string[] args)
+
+        private static async Task HandleBuildCommandAsync(string[] args)
         {
-            // Validate argument count
-            if (args.Length < 2)
+            // 1. Sync dependencies first.
+            LogInfo("--- Syncing Dependencies ---");
+            await HandleSyncCommandAsync(args);
+
+            // 2. Determine project type and load config.
+            var libraryInfo = new libraryInfo();
+            string configPath = File.Exists("library.cfg") ? "library.cfg" : "app.cfg";
+
+            if (!File.Exists(configPath))
             {
-                Console.WriteLine("Usage: orange add <library>");
+                LogError("No app.cfg or library.cfg found. Please run 'orange init' first.");
                 return;
             }
 
-            string libraryPath = args[1];
+            Information info = libraryInfo.LoadCfg(configPath);
 
-            // Check If file exists
-            if (File.Exists(libraryPath))
+            // 3. Build the library or application.
+            if (configPath == "library.cfg")
             {
-                Console.WriteLine("Error: library file local installing is not supported yet.");
+                LogInfo("\n--- Building Library ---");
+                Library.CreateLibrary(info); // Assuming this is a synchronous method
+                LogSuccess("Successfully built library!");
                 return;
             }
-            else
+            
+            LogInfo("\n--- Building Application ---");
+            await ProcessRunner.RunAsync("make", "clean"); // Clean previous build artifacts.
+            
+            var (success, _, error) = await ProcessRunner.RunAsync("make", "");
+            if (!success)
             {
-                try
-                {
-                    // load library cfg
-                    libraryInfo libraryloader = new libraryInfo();
-                    if (File.Exists("library.cfg"))
-                    {
-                        libraryloader.LoadCfg("library.cfg");
-                    }
-                    else
-                    {
-                        libraryloader.LoadCfg("app.cfg");
-                    }
-
-                    OrangeLib.Net.Internet.GetLibrary(libraryPath).GetAwaiter().GetResult();
-                    // Add dependency to config
-                    if (File.Exists("library.cfg"))
-                    {
-                        libraryloader.AddDependencyToCfg(libraryPath, "library.cfg");
-                    }
-                    else
-                    {
-                        libraryloader.AddDependencyToCfg(libraryPath, "app.cfg");
-                    }
-
-                    Console.WriteLine("Successfully added the dependency.");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error installing library: {ex.Message}");
-                    return;
-                }
-                Console.WriteLine($"library {libraryPath} installed successfully.");
-            }
-        }
-        static public void Build(string[] args)
-        {
-            var libraryinfo = new libraryInfo();
-            if (File.Exists("library.cfg"))
-            {
-                Information info = libraryinfo.LoadCfg("library.cfg");
-                Library.CreateLibrary(info);
-                Console.WriteLine("Successfully built library!");
+                LogError($"Build Failed. Error output:\n{error}");
                 return;
             }
-            else
+            LogSuccess("Successfully built application ELF!");
+
+            // 4. Optionally build the CIA.
+            if (args.Length > 1 && args[1].ToLowerInvariant() == "cia")
             {
-                if (!File.Exists("app.cfg"))
+                LogInfo("\n--- Building CIA ---");
+                // The CiaBuilder will handle banner/icon creation internally.
+                var ciaBuilder = new CiaBuilder(
+                    info.Title,
+                    info.Description,
+                    info.Author,
+                    "assets/icon-large.png",
+                    "assets/icon-small.png",
+                    "assets/banner.png",
+                    "assets/banner_audio.wav" // Pass the ORIGINAL audio file.
+                );
+                
+                // Use the fully async method from the refactored OrangeLib
+                bool ciaSuccess = await ciaBuilder.GenerateCia();
+                if (ciaSuccess)
                 {
-                    Console.Error.WriteLine("No app.cfg or library.cfg found. Please run 'orange init (app/library)' to create one.");
-                    return;
-                }
-                Information info = libraryinfo.LoadCfg("app.cfg");
-                CollinExecute.Shell.SystemCommand("make clean");
-                Directory.CreateDirectory("build");
-                File.Copy("app.cfg", "build/app.cfg");
-                bool success = CollinExecute.Shell.SystemCommand("make");
-                if (Directory.Exists(".orange") || args[2] == "cia")
-                {
-                    // Example usage:
-                    string originalAudio = "assets/banner_audio.wav";
-                    string convertedAudio = ".orange/banner_audio_converted.wav";
-
-                    bool conversionSuccess = OrangeLib.AudioConverter.ConvertWavTo3dsFormatAsync(originalAudio, convertedAudio).GetAwaiter().GetResult();
-
-                    if (conversionSuccess)
-                    {
-                        // Now use the 'convertedAudio' path when building the CIA
-                        var cia = new Cia(info.Title, info.Description, info.Author, "assets/icon-large.png", "assets/icon-small.png", "assets/banner.png", convertedAudio);
-                        cia.GenerateCia().Wait();
-                        if (File.Exists($"{info.Title}.cia"))
-                        {
-                            Console.WriteLine($"Successfully built {info.Title}.cia!");
-                        }
-                        else
-                        {
-                            Console.Error.WriteLine("Failed to build CIA file.");
-                            return;
-                        }
-
-                    }
-                    else
-                    {
-                        Console.Error.WriteLine("Failed to convert audio, aborting CIA creation.");
-                        return;
-                    }
-
-                }
-                if (!success)
-                {
-                    Console.Error.WriteLine("Build Failed.");
-                    return;
+                    LogSuccess($"Successfully built {info.Title}.cia!");
                 }
                 else
                 {
-                    Console.WriteLine("Successfully built app!");
+                    LogError("Failed to build CIA file. Check the output from makerom above.");
                 }
             }
-
-
-
         }
-        static public void Sync(string[] args)
+
+        private static async Task HandleSyncCommandAsync(string[] args)
         {
-            // Ensure production URL is used for library downloads
             OrangeLib.Net.Internet.SetWebPath("https://orange.collinsoftware.dev/");
-            var libraryinfo = new libraryInfo();
-            Information info = libraryinfo.LoadCfg("library.cfg");
+            var libraryInfo = new libraryInfo();
+            string configPath = File.Exists("library.cfg") ? "library.cfg" : "app.cfg";
+
+            if (!File.Exists(configPath))
+            {
+                LogError("No app.cfg or library.cfg found. Please run 'orange init' first.");
+                return;
+            }
+
+            Information info = libraryInfo.LoadCfg(configPath);
             var dependencies = info.Dependencies?.Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+
+            if (!dependencies.Any())
+            {
+                LogInfo("No dependencies to sync.");
+                return;
+            }
+
             foreach (var dep in dependencies)
             {
-                OrangeLib.Net.Internet.GetLibrary(dep).GetAwaiter().GetResult();
-                Console.WriteLine($"Installed {dep}");
+                await OrangeLib.Net.Internet.GetLibrary(dep);
+                Console.WriteLine($" > Synced {dep}");
             }
         }
-        static public void Stream(string[] args)
+        
+        private static async Task HandleAddCommandAsync(string[] args)
         {
             if (args.Length < 2)
             {
-                Console.WriteLine("Usage: orange stream [3DS Ip address] (-r --retries Number of times to retry the connction)");
+                LogError("Usage: orange add <library_name>");
+                return;
+            }
+            string libraryName = args[1];
+
+            try
+            {
+                string configPath = File.Exists("library.cfg") ? "library.cfg" : "app.cfg";
+                if (!File.Exists(configPath))
+                {
+                    LogError("No app.cfg or library.cfg found. Please run 'orange init' first.");
+                    return;
+                }
+
+                var libraryLoader = new libraryInfo();
+                libraryLoader.LoadCfg(configPath);
+
+                LogInfo($"Downloading library '{libraryName}'...");
+                await OrangeLib.Net.Internet.GetLibrary(libraryName);
+                
+                libraryLoader.AddDependencyToCfg(libraryName, configPath);
+                LogSuccess($"Successfully added '{libraryName}' as a dependency to {configPath}.");
+            }
+            catch (Exception ex)
+            {
+                LogError($"Error adding library: {ex.Message}");
+            }
+        }
+
+        private static void HandleStreamCommand(string[] args)
+        {
+            if (args.Length < 2)
+            {
+                LogError("Usage: orange stream <3DS_IP_ADDRESS> (--retries <n>)");
                 return;
             }
             string ip = args[1];
             int retries = 1;
-            // Parse optional retries argument
+
             for (int i = 2; i < args.Length; i++)
             {
                 if ((args[i] == "-r" || args[i] == "--retries") && i + 1 < args.Length && int.TryParse(args[i + 1], out int parsedRetries))
@@ -208,78 +217,144 @@ Commands:
                     break;
                 }
             }
-            bool success = OrangeLib.Streaming.Stream3dsxTo3ds(ip, retries);
+            
+            string[] files = Directory.GetFiles(Directory.GetCurrentDirectory(), "*.3dsx");
+            if (!files.Any())
+            {
+                LogError("No .3dsx file found in the current directory. Please run 'orange build' first.");
+                return;
+            }
+            if (files.Length > 1)
+            {
+                LogError("Multiple .3dsx files found. Please specify which one to stream or clean your directory.");
+                return;
+            }
+
+            bool success = OrangeLib.Streaming.Stream3dsxTo3ds(ip, retries, files[0]);
             if (success)
             {
-                Console.WriteLine($"Successfully streamed to 3DS at {ip}.");
+                LogSuccess($"Successfully streamed to 3DS at {ip}.");
             }
             else
             {
-                Console.WriteLine($"Failed to stream to 3DS at {ip} after {retries} attempt(s).");
+                LogError($"Failed to stream to 3DS at {ip} after {retries} attempt(s).");
             }
         }
-        private static void ShowHelp()
-        {
-            Console.WriteLine(_help);
-        }
 
-        private static void HandleInitCommand(string[] args)
+        private static async Task HandleInitCommandAsync(string[] args)
         {
             if (args.Length < 2)
             {
-                Console.WriteLine("Usage: orange init <app/library>");
+                LogError("Usage: orange init <app|library>");
                 return;
             }
 
-            string type = args[1];
-            string templateUrl = String.Empty;
-            string rootFolder = String.Empty;
+            string type = args[1].ToLowerInvariant();
+            string templateUrl, rootFolder;
 
-            if (type == "library")
+            switch (type)
             {
-                templateUrl = "https://github.com/orange-3ds/3ds-library-template/archive/refs/heads/main.zip";
-                rootFolder = "3ds-library-template-main/";
-            }
-            else if (type == "app")
-            {
-                templateUrl = "https://github.com/orange-3ds/3ds-app-template/archive/refs/heads/main.zip";
-                rootFolder = "3ds-app-template-main/";
-            }
-            else
-            {
-                Console.WriteLine("Unknown type. Use 'app' or 'library'.");
-                return;
+                case "library":
+                    templateUrl = "https://github.com/orange-3ds/3ds-library-template/archive/refs/heads/main.zip";
+                    rootFolder = "3ds-library-template-main/";
+                    break;
+                case "app":
+                    templateUrl = "https://github.com/orange-3ds/3ds-app-template/archive/refs/heads/main.zip";
+                    rootFolder = "3ds-app-template-main/";
+                    break;
+                default:
+                    LogError("Unknown type. Use 'app' or 'library'.");
+                    return;
             }
 
-            OrangeLib.Utils.DownloadFileAsync(templateUrl, "3ds-template.zip").Wait();
-            ExtractTemplateZip("3ds-template.zip", rootFolder);
-            if (File.Exists("3ds-template.zip"))
-            {
-                File.Delete("3ds-template.zip");
-            }
-            Console.WriteLine("Extracted template project! Run orange build to build it!");
+            string zipPath = "3ds-template.zip";
+            LogInfo($"Downloading template for '{type}'...");
+            await OrangeLib.Utils.DownloadFileAsync(templateUrl, zipPath);
+            
+            LogInfo("Extracting template...");
+            ExtractTemplateZip(zipPath, rootFolder);
+
+            File.Delete(zipPath);
+            LogSuccess("Project initialized successfully! Run 'orange build' to get started.");
         }
 
         private static void ExtractTemplateZip(string zipPath, string rootFolder)
         {
-            using (var archive = ZipFile.OpenRead(zipPath))
+            using var archive = ZipFile.OpenRead(zipPath);
+            string intendedDirectory = Path.GetFullPath(Directory.GetCurrentDirectory());
+
+            foreach (var entry in archive.Entries)
             {
-                foreach (var entry in archive.Entries)
+                if (!entry.FullName.StartsWith(rootFolder) || string.IsNullOrEmpty(entry.Name)) continue;
+                
+                string destinationPath = Path.GetFullPath(Path.Combine(intendedDirectory, entry.FullName.Substring(rootFolder.Length)));
+                
+                // Security check to prevent Zip Slip vulnerability
+                if (!destinationPath.StartsWith(intendedDirectory, StringComparison.Ordinal))
                 {
-                    if (entry.FullName.StartsWith(rootFolder) && !string.IsNullOrEmpty(entry.Name))
-                    {
-                        string intendedDirectory = Path.GetFullPath(Directory.GetCurrentDirectory());
-                        string destinationPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), entry.FullName.Substring(rootFolder.Length)));
-
-                        if (!destinationPath.StartsWith(intendedDirectory, StringComparison.Ordinal))
-                        {
-                            throw new IOException($"Entry is outside of the target directory: {entry.FullName}");
-                        }
-
-                        Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
-                        entry.ExtractToFile(destinationPath, true);
-                    }
+                    throw new IOException($"Entry is attempting to extract outside of the target directory: {entry.FullName}");
                 }
+
+                Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
+                entry.ExtractToFile(destinationPath, true);
+            }
+        }
+        
+        // --- Helper Methods for Console Output ---
+        private static void ShowHelp() => Console.WriteLine(HelpText);
+        private static void LogError(string message)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(message);
+            Console.ResetColor();
+        }
+        private static void LogSuccess(string message)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine(message);
+            Console.ResetColor();
+        }
+        private static void LogInfo(string message) => Console.WriteLine(message);
+    }
+    
+    /// <summary>
+    /// A robust, self-contained runner for external processes like 'make'.
+    /// </summary>
+    public static class ProcessRunner
+    {
+        public static async Task<(bool success, string output, string error)> RunAsync(string command, string arguments)
+        {
+            using var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = command,
+                    Arguments = arguments,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+
+            try
+            {
+                process.Start();
+
+                // Asynchronously read the output streams.
+                var outputTask = process.StandardOutput.ReadToEndAsync();
+                var errorTask = process.StandardError.ReadToEndAsync();
+                
+                await process.WaitForExitAsync();
+                
+                string output = await outputTask;
+                string error = await errorTask;
+
+                return (process.ExitCode == 0, output, error);
+            }
+            catch (Exception ex)
+            {
+                return (false, string.Empty, $"Failed to execute '{command}'. Ensure it is in your system's PATH. Details: {ex.Message}");
             }
         }
     }
