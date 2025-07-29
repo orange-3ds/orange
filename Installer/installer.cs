@@ -6,7 +6,6 @@ using System.Security.Principal; // For Windows admin check
 using System.Text.Json;
 using System.Threading.Tasks;
 using OrangeLib;
-using CollinExecute;
 
 namespace Installer
 {
@@ -123,11 +122,11 @@ namespace Installer
                 // Download ffmeg from package managers.
                 if (Program.IsWindows())
                 {
-                    CollinExecute.Shell.SystemCommand("winget install ffmpeg");
+                    OrangeLib.Utils.ExecuteShellCommand("winget install ffmpeg");
                 }
                 else if (Program.IsLinux())
                 {
-                    CollinExecute.Shell.SystemCommand("sudo apt install ffmpeg");
+                    OrangeLib.Utils.ExecuteShellCommand("sudo apt install ffmpeg");
                 }
                 else
                 {
@@ -467,7 +466,7 @@ namespace Installer
             
     
             
-            bool success = CollinExecute.Shell.SystemCommand(chmodCommand);
+            bool success = OrangeLib.Utils.ExecuteShellCommand(chmodCommand);
             if (success)
             {
                 Console.WriteLine("Made Orange executable.");
@@ -498,7 +497,7 @@ namespace Installer
                 string command = $"powershell -Command \"$env:PATH += ';{directory}'; [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'User')\"";
   
                 
-                bool success = CollinExecute.Shell.SystemCommand(command);
+                bool success = OrangeLib.Utils.ExecuteShellCommand(command);
                 if (success)
                 {
                     Console.WriteLine("Added to Windows PATH.");
@@ -593,7 +592,7 @@ namespace Installer
                 string command = $"powershell -Command \"$path = [Environment]::GetEnvironmentVariable('PATH', 'User'); $newPath = $path -replace [regex]::Escape(';{directory}'), ''; [Environment]::SetEnvironmentVariable('PATH', $newPath, 'User')\"";
                 
                 
-                bool success = CollinExecute.Shell.SystemCommand(command);
+                bool success = OrangeLib.Utils.ExecuteShellCommand(command);
                 if (success)
                 {
                     Console.WriteLine("Removed from Windows PATH.");
