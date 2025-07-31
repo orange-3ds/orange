@@ -8,14 +8,14 @@ namespace OrangeLib
 {
     public static class Streaming
     {
-        public static bool Stream3dsxTo3ds(string ip, int retries)
+        public static bool Stream3dsxTo3ds(string ip, int retries, string path)
         {
             int i = 0;
             while (i < retries)
             {
                 try
                 {
-                    bool success = CollinExecute.Shell.SystemCommand($"3dslink -a {ip} -r {retries}", false, true);
+                    bool success = CollinExecute.Shell.SystemCommand($"3dslink {path} -a {ip}", false, true);
                     if (success)
                     {
                         return true;
