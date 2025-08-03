@@ -149,7 +149,7 @@ namespace Installer
                 }
                 else
                 {
-                    Console.WriteLine("Warning: ffmpeg is not supported on this platform. Please install it manually to build cias.");
+                    Console.WriteLine("Warning: ffmpeg is not supported on this platform. Please install it manually to build CIAs.");
                 }
 
                 // Get installation directory

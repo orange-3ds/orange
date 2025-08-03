@@ -241,7 +241,7 @@ namespace OrangeLib
             string dirBeforeTemp = Directory.GetCurrentDirectory();
 
             // Extract the library zip to a temporary directory
-            string tempDir = Path.Combine(Path.GetTempPath(), "OrangeLib_library");
+            string tempDir = Path.Combine(Path.GetTempPath(), "OrangeLib_temp_library");
             Directory.CreateDirectory(tempDir);
             try
             {
