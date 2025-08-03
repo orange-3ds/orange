@@ -16,7 +16,7 @@ namespace Orange
 Commands:
     init [app/library]    Create a new 3DS app or library project from templates
     sync                  Download and install all dependencies listed in config
-    build                 Build the current project (app or library)
+    build (cia)           Build the current project (app or library)
     add [library name]    Download and add a library dependency to the project
     stream [3DS IP] [options]  Stream built 3DSX file to 3DS console
                               Options: -r, --retries <num>  Number of connection retry attempts
@@ -31,10 +31,8 @@ Examples:
     orange add mylib             Add 'mylib' library as a dependency
     orange stream 192.168.1.100  Stream to 3DS at IP 192.168.1.100
     orange stream 192.168.1.100 --retries 5  Stream with 5 retry attempts";
-        static readonly string _version = "v1.0.2";
         static readonly string _help = V;
-        static void Main(string[] args)
-        private const string Version = "v1.0.3"; // Incremented version for refactor
+        private const string Version = "v1.1.0"; // Incremented version for refactor
 
         // Main entry point is now async to allow for top-level await.
         static async Task Main(string[] args)
