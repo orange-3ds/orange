@@ -452,15 +452,15 @@ namespace Installer
             try
             {
                 // Check if platform is supported
-                string binaryName = GetMakeromPlatformBinaryName();
+                string binaryName = GetBannertoolPlatformBinaryName();
                 if (string.IsNullOrEmpty(binaryName))
                 {
-                    Console.WriteLine("Warning: makerom is not supported on the current platform.");
-                    Console.WriteLine($"Platform: {RuntimeInformation.OSDescription}. Skipping makerom installation.");
+                    Console.WriteLine("Warning: bannertool is not supported on the current platform.");
+                    Console.WriteLine($"Platform: {RuntimeInformation.OSDescription}. Skipping bannertool installation.");
                     return string.Empty;
                 }
 
-                Console.WriteLine($"Downloading makerom binary: {binaryName}");
+                Console.WriteLine($"Downloading bannertool binary: {binaryName}");
 
                 using (var httpClient = new HttpClient())
                 {
