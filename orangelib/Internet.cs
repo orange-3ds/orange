@@ -31,7 +31,7 @@ namespace OrangeLib.Net
         {
             if (string.IsNullOrWhiteSpace(libraryName))
             {
-                throw new ArgumentException("library name cannot be null or empty.", nameof(libraryName));
+                throw new ArgumentException("Library name cannot be null or empty.", nameof(libraryName));
             }
             string url = $"{_webPath}libraries/{libraryName}.zip";
             Console.WriteLine($"Fetching library from: {url}");

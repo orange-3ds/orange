@@ -9,7 +9,6 @@
 
 
   <ItemGroup>
-    <PackageReference Include="CollinExecute" Version="1.0.0" />
   </ItemGroup>
 
   <ItemGroup>

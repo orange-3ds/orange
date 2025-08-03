@@ -6,7 +6,7 @@ using System.Security.Principal; // For Windows admin check
 using System.Text.Json;
 using System.Threading.Tasks;
 using OrangeLib;
-using CollinExecute;
+
 
 namespace Installer
 {
@@ -16,7 +16,7 @@ namespace Installer
         public static bool IsLinux() => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
         
         
-        private const string Version = "1.0.0";
+        private const string Version = "1.1.0";
 
         static void Main(string[] args)
         {
@@ -73,17 +73,23 @@ namespace Installer
 
         static void ShowHelp()
         {
+            Console.WriteLine("Orange Installer - Install Orange DevkitPro Library Manager");
+            Console.WriteLine();
             Console.WriteLine("Usage: Installer [options]");
+            Console.WriteLine();
             Console.WriteLine("Options:");
             Console.WriteLine("  --help, -h        Show this help message");
-            Console.WriteLine("  --uninstall, -u   Uninstall Orange");
-            Console.WriteLine("  --version, -v     Specify version to install (e.g., v1.0.0)");
+            Console.WriteLine("  --uninstall, -u   Uninstall Orange from the system");
+            Console.WriteLine("  --version, -v     Specify version to install (e.g., v1.0.2)");
             Console.WriteLine();
             Console.WriteLine("Default behavior (no options): Install latest Orange version");
             Console.WriteLine();
             Console.WriteLine("Examples:");
-            Console.WriteLine("  Installer                    # Install latest version");
-            Console.WriteLine("  Installer --version v1.0.2   # Install specific version");
+            Console.WriteLine("  Installer                     # Install latest version");
+            Console.WriteLine("  Installer --version v1.0.2    # Install specific version");
+            Console.WriteLine("  Installer --uninstall         # Remove Orange from system");
+            Console.WriteLine();
+            Console.WriteLine("Note: Administrator/root privileges required for installation");
         }
 
         static async Task InstallOrangeAsync(string? targetVersion = null)
@@ -121,6 +127,31 @@ namespace Installer
                     Console.WriteLine($"Downloaded makerom binary: {makeromExePath}");
                 }
 
+                // Download bannertool binary
+                string bannertoolExePath = await DownloadBannertoolBinaryAsync();
+                if (string.IsNullOrEmpty(bannertoolExePath))
+                {
+                    await Console.Error.WriteLineAsync("Warning: Failed to download bannertool binary. Continuing with Orange installation only.");
+                }
+                else
+                {
+                    Console.WriteLine($"Downloaded bannertool binary: {bannertoolExePath}");
+                }
+
+                // Download ffmpeg from package managers.
+                if (Program.IsWindows())
+                {
+                    Utils.ExecuteShellCommand("winget install ffmpeg");
+                }
+                else if (Program.IsLinux())
+                {
+                    Utils.ExecuteShellCommand("sudo apt install ffmpeg");
+                }
+                else
+                {
+                    Console.WriteLine("Warning: ffmpeg is not supported on this platform. Please install it manually to build CIAs.");
+                }
+
                 // Get installation directory
                 string installDir = GetInstallDirectory();
                 Console.WriteLine($"Installing to: {installDir}");
@@ -151,6 +182,20 @@ namespace Installer
                     }
                 }
 
+                // Copy bannertool executable to installation directory if downloaded successfully
+                if (!string.IsNullOrEmpty(bannertoolExePath))
+                {
+                    string targetBannertoolExePath = Path.Combine(installDir, Path.GetFileName(bannertoolExePath));
+                    File.Copy(bannertoolExePath, targetBannertoolExePath, true);
+                    Console.WriteLine("Copied bannertool executable.");
+
+                    // Make bannertool executable on Unix systems
+                    if (!IsWindows())
+                    {
+                        MakeExecutable(targetBannertoolExePath);
+                    }
+                }
+
                 // Make Orange executable on Unix systems
                 if (!IsWindows())
                 {
@@ -168,6 +213,10 @@ namespace Installer
                     {
                         File.Delete(makeromExePath);
                     }
+                    if (!string.IsNullOrEmpty(bannertoolExePath))
+                    {
+                        File.Delete(bannertoolExePath);
+                    }
                 }
                 catch
                 {
@@ -178,6 +227,10 @@ namespace Installer
                 if (!string.IsNullOrEmpty(makeromExePath))
                 {
                     Console.WriteLine("✓ makerom has been installed successfully!");
+                }
+                if (!string.IsNullOrEmpty(bannertoolExePath))
+                {
+                    Console.WriteLine("✓ bannertool has been installed successfully!");
                 }
                 
                 if (!IsWindows())
@@ -400,7 +453,60 @@ namespace Installer
                 return string.Empty;
             }
         }
-        
+        static async Task<string> DownloadBannertoolBinaryAsync()
+        {
+            try
+            {
+                // Check if platform is supported
+                string binaryName = GetBannertoolPlatformBinaryName();
+                if (string.IsNullOrEmpty(binaryName))
+                {
+                    Console.WriteLine("Warning: bannertool is not supported on the current platform.");
+                    Console.WriteLine($"Platform: {RuntimeInformation.OSDescription}. Skipping bannertool installation.");
+                    return string.Empty;
+                }
+
+                Console.WriteLine($"Downloading bannertool binary: {binaryName}");
+
+                using (var httpClient = new HttpClient())
+                {
+                    httpClient.DefaultRequestHeaders.Add("User-Agent", "Orange-Installer/1.0");
+
+                    // Direct download URLs from orange.collinsoftware.dev
+                    string downloadUrl;
+                    if (IsWindows())
+                    {
+                        downloadUrl = "https://orange.collinsoftware.dev/bannertool/bannertool.exe";
+                    }
+                    else if (IsLinux())
+                    {
+                        downloadUrl = "https://orange.collinsoftware.dev/bannertool/bannertool";
+                    }
+                    else
+                    {
+                        return string.Empty; // Should not reach here due to earlier check
+                    }
+
+                    Console.WriteLine($"Downloading bannertool from: {downloadUrl}");
+
+                    // Download the binary
+                    byte[] binaryData = await httpClient.GetByteArrayAsync(downloadUrl);
+
+                    // Save to temporary file
+                    string tempFileName = binaryName;
+                    string tempPath = Path.Combine(Path.GetTempPath(), tempFileName);
+                    await File.WriteAllBytesAsync(tempPath, binaryData);
+                    Console.WriteLine($"Downloaded bannertool binary to: {tempPath}");
+                    return tempPath;
+                }
+            }
+            catch (Exception ex)
+            {
+                await Console.Error.WriteLineAsync($"Failed to download bannertool binary: {ex.Message}");
+                return string.Empty;
+            }
+        }
+
         static string GetPlatformBinaryName()
         {
             if (IsWindows())
@@ -434,6 +540,23 @@ namespace Installer
             }
         }
 
+        static string GetBannertoolPlatformBinaryName()
+        {
+            if (IsWindows())
+            {
+                return "bannertool.exe";
+            }
+            else if (IsLinux())
+            {
+                return "bannertool";
+            }
+            else
+            {
+                // Return an empty string to indicate unsupported platforms
+                return string.Empty;
+            }
+        }
+
         static string GetInstallDirectory()
         {
             if (IsWindows())
@@ -449,12 +572,10 @@ namespace Installer
 
         static void MakeExecutable(string filePath)
         {
-            // Make file executable on Unix systems using CollinExecute when available
+            // Make file executable on Unix systems using built-in shell command execution
             string chmodCommand = $"chmod +x \"{filePath}\"";
             
-    
-            
-            bool success = CollinExecute.Shell.SystemCommand(chmodCommand);
+            bool success = Utils.ExecuteShellCommand(chmodCommand);
             if (success)
             {
                 Console.WriteLine("Made Orange executable.");
@@ -481,11 +602,10 @@ namespace Installer
         {
             try
             {
-                // Use PowerShell to add to user PATH with CollinExecute when available
+                // Use PowerShell to add to user PATH
                 string command = $"powershell -Command \"$env:PATH += ';{directory}'; [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'User')\"";
-  
                 
-                bool success = CollinExecute.Shell.SystemCommand(command);
+                bool success = Utils.ExecuteShellCommand(command);
                 if (success)
                 {
                     Console.WriteLine("Added to Windows PATH.");
@@ -576,11 +696,10 @@ namespace Installer
         {
             try
             {
-                // Use PowerShell to remove from user PATH with CollinExecute when available
+                // Use PowerShell to remove from user PATH
                 string command = $"powershell -Command \"$path = [Environment]::GetEnvironmentVariable('PATH', 'User'); $newPath = $path -replace [regex]::Escape(';{directory}'), ''; [Environment]::SetEnvironmentVariable('PATH', $newPath, 'User')\"";
                 
-                
-                bool success = CollinExecute.Shell.SystemCommand(command);
+                bool success = Utils.ExecuteShellCommand(command);
                 if (success)
                 {
                     Console.WriteLine("Removed from Windows PATH.");

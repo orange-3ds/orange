@@ -32,7 +32,7 @@ namespace OrangeLib.Info
         }
         public string GetDependencies()
         {
-            string result = ArrayToStringSpaceSeperate(Dependencies);
+            string result = ArrayToStringSpaceSeparate(Dependencies);
             return result;
         }
         static public string GetReadmeContents(string path)
@@ -51,7 +51,7 @@ namespace OrangeLib.Info
                 return $"Error reading README file '{path}': {ex.Message}";
             }
         }
-        public static string ArrayToStringSpaceSeperate(string[] array)
+        public static string ArrayToStringSpaceSeparate(string[] array)
         {
             if (array == null || array.Length == 0)
                 return string.Empty;

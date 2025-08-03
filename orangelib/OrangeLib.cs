@@ -3,19 +3,19 @@ using OrangeLib.Info;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
-using CollinExecute;
+
 namespace OrangeLib
 {
     public static class Streaming
     {
-        public static bool Stream3dsxTo3ds(string ip, int retries)
+        public static bool Stream3dsxTo3ds(string ip, int retries, string path)
         {
             int i = 0;
             while (i < retries)
             {
                 try
                 {
-                    bool success = CollinExecute.Shell.SystemCommand($"3dslink -a {ip} -r {retries}", false, true);
+                    bool success = Utils.ExecuteShellCommand($"3dslink {path} -a {ip}");
                     if (success)
                     {
                         return true;
@@ -153,7 +153,7 @@ namespace OrangeLib
             }
             if (File.Exists("Makefile"))
             {
-                bool successclean = CollinExecute.Shell.SystemCommand("make clean");
+                bool successclean = Utils.ExecuteShellCommand("make clean");
                 Directory.CreateDirectory("build");
                 if (File.Exists("library.cfg"))
                 {
@@ -172,7 +172,7 @@ namespace OrangeLib
                     Console.Error.WriteLine("'library.cfg' does not exist. Aborting operation.");
                     return;
                 }
-                bool successmake = CollinExecute.Shell.SystemCommand("make");
+                bool successmake = Utils.ExecuteShellCommand("make");
                 if (!successclean || !successmake)
                 {
                     Console.Error.WriteLine("Build Failed.");
@@ -241,7 +241,7 @@ namespace OrangeLib
             string dirBeforeTemp = Directory.GetCurrentDirectory();
 
             // Extract the library zip to a temporary directory
-            string tempDir = Path.Combine(Path.GetTempPath(), "OrangeLiblibrary");
+            string tempDir = Path.Combine(Path.GetTempPath(), "OrangeLib_temp_library");
             Directory.CreateDirectory(tempDir);
             try
             {
