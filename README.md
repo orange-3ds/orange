@@ -38,17 +38,19 @@ sudo ./Installer --version v1.0.2
 ./Installer --help
 ```
 
+
+## Wiki
+
+Go to the wiki [here](https://github.com/orange-3ds/orange/wiki)
+
+## Features
+
+- Cia building
+- Library management
+- 3dsx Streaming with 3dslink
+
+
+
 ## Acknowledgements
 
  - [DevkitPro](https://github.com/devkitpro)
-
-## How to create a library
-
-Use the following command to create a library:
-```bash
-orange init library
-```
-
-Create a github issue with the library template and input your information!
-
-
