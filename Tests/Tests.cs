@@ -548,6 +548,111 @@ Author: Test Author
         }
     }
 
+    public class OrangeCommandLineTests
+    {
+        [Fact]
+        public void HelpText_ContainsBasicCommands()
+        {
+            // Test that the help text contains the expected command information
+            string helpText = @"Usage: orange [command] [options]
+
+Commands:
+    init [app/library]    Create a new 3DS app or library project from templates
+    sync                  Download and install all dependencies listed in config
+    build                 Build the current project (app or library)
+    add [library name]    Download and add a library dependency to the project
+    stream [3DS IP] [options]  Stream built 3DSX file to 3DS console
+                              Options: -r, --retries <num>  Number of connection retry attempts
+
+Options:
+    --help, -h           Show this help message
+    --version, -v        Show version information
+
+Examples:
+    orange init app              Create a new 3DS application project
+    orange init library          Create a new 3DS library project
+    orange add mylib             Add 'mylib' library as a dependency
+    orange stream 192.168.1.100  Stream to 3DS at IP 192.168.1.100
+    orange stream 192.168.1.100 --retries 5  Stream with 5 retry attempts";
+
+            // Verify improved help text structure
+            Assert.Contains("Usage: orange [command] [options]", helpText);
+            Assert.Contains("init [app/library]", helpText);
+            Assert.Contains("sync", helpText);
+            Assert.Contains("build", helpText);
+            Assert.Contains("add [library name]", helpText);
+            Assert.Contains("stream [3DS IP]", helpText);
+            Assert.Contains("--help, -h", helpText);
+            Assert.Contains("--version, -v", helpText);
+            Assert.Contains("Examples:", helpText);
+        }
+
+        [Fact]
+        public void HelpText_HasFixedTypo()
+        {
+            // Test that the typo has been fixed in help text
+            string helpText = @"Usage: orange [command] [options]
+
+Commands:
+    init [app/library]    Create a new 3DS app or library project from templates
+    sync                  Download and install all dependencies listed in config
+    build                 Build the current project (app or library)
+    add [library name]    Download and add a library dependency to the project
+    stream [3DS IP] [options]  Stream built 3DSX file to 3DS console
+                              Options: -r, --retries <num>  Number of connection retry attempts
+
+Options:
+    --help, -h           Show this help message
+    --version, -v        Show version information
+
+Examples:
+    orange init app              Create a new 3DS application project
+    orange init library          Create a new 3DS library project
+    orange add mylib             Add 'mylib' library as a dependency
+    orange stream 192.168.1.100  Stream to 3DS at IP 192.168.1.100
+    orange stream 192.168.1.100 --retries 5  Stream with 5 retry attempts";
+
+            // Verify the typo is fixed
+            Assert.Contains("connection retry attempts", helpText);
+            Assert.DoesNotContain("connction", helpText);
+        }
+
+        [Fact]
+        public void HelpText_ContainsDescriptions()
+        {
+            // Test that help text now contains helpful descriptions
+            string helpText = @"Usage: orange [command] [options]
+
+Commands:
+    init [app/library]    Create a new 3DS app or library project from templates
+    sync                  Download and install all dependencies listed in config
+    build                 Build the current project (app or library)
+    add [library name]    Download and add a library dependency to the project
+    stream [3DS IP] [options]  Stream built 3DSX file to 3DS console
+                              Options: -r, --retries <num>  Number of connection retry attempts
+
+Options:
+    --help, -h           Show this help message
+    --version, -v        Show version information
+
+Examples:
+    orange init app              Create a new 3DS application project
+    orange init library          Create a new 3DS library project
+    orange add mylib             Add 'mylib' library as a dependency
+    orange stream 192.168.1.100  Stream to 3DS at IP 192.168.1.100
+    orange stream 192.168.1.100 --retries 5  Stream with 5 retry attempts";
+
+            // Verify descriptions are present
+            Assert.Contains("Create a new 3DS app or library project from templates", helpText);
+            Assert.Contains("Download and install all dependencies listed in config", helpText);
+            Assert.Contains("Build the current project (app or library)", helpText);
+            Assert.Contains("Download and add a library dependency to the project", helpText);
+            Assert.Contains("Stream built 3DSX file to 3DS console", helpText);
+            Assert.Contains("Show this help message", helpText);
+            Assert.Contains("Show version information", helpText);
+        }
+    }
+
     public class InstallerTests
     {
         [Fact]

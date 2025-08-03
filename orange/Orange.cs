@@ -11,16 +11,30 @@ namespace Orange
 {
     static class Program
     {
-        private const string HelpText = @"Usage: orange [command] (options)
+        private const string V = @"Usage: orange [command] [options]
+
 Commands:
-    init [app/library]        Initializes a new 3DS app or library from a template.
-    sync                      Downloads and installs all dependencies from the config file.
-    build (cia)               Builds the project. Optionally builds a CIA if 'cia' is specified.
-    add [library name]        Adds a new library dependency to your project.
-    stream [ip] (--retries n) Streams the built .3dsx file to a 3DS running a homebrew loader.
-    --help                    Displays this help information.
-    --version                 Displays the tool version.";
-        private const string Version = "v1.0.5"; // Incremented version for refactor
+    init [app/library]    Create a new 3DS app or library project from templates
+    sync                  Download and install all dependencies listed in config
+    build                 Build the current project (app or library)
+    add [library name]    Download and add a library dependency to the project
+    stream [3DS IP] [options]  Stream built 3DSX file to 3DS console
+                              Options: -r, --retries <num>  Number of connection retry attempts
+
+Options:
+    --help, -h           Show this help message
+    --version, -v        Show version information
+
+Examples:
+    orange init app              Create a new 3DS application project
+    orange init library          Create a new 3DS library project
+    orange add mylib             Add 'mylib' library as a dependency
+    orange stream 192.168.1.100  Stream to 3DS at IP 192.168.1.100
+    orange stream 192.168.1.100 --retries 5  Stream with 5 retry attempts";
+        static readonly string _version = "v1.0.2";
+        static readonly string _help = V;
+        static void Main(string[] args)
+        private const string Version = "v1.0.3"; // Incremented version for refactor
 
         // Main entry point is now async to allow for top-level await.
         static async Task Main(string[] args)
@@ -300,7 +314,7 @@ Commands:
         }
         
         // --- Helper Methods for Console Output ---
-        private static void ShowHelp() => Console.WriteLine(HelpText);
+        private static void ShowHelp() => Console.WriteLine(_help);
         private static void LogError(string message)
         {
             Console.ForegroundColor = ConsoleColor.Red;
