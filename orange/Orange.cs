@@ -11,26 +11,37 @@ namespace Orange
 {
     static class Program
     {
-        private const string V = @"Usage: orange [command] [options]
+        private const string V = @"Orange - DevkitPro Library Manager
+
+Usage: orange [command] [options]
 
 Commands:
-    init [app/library]    Create a new 3DS app or library project from templates
+    init <app|library>    Create a new 3DS app or library project from templates
     sync                  Download and install all dependencies listed in config
-    build (cia)           Build the current project (app or library)
-    add [library name]    Download and add a library dependency to the project
-    stream [3DS IP] [options]  Stream built 3DSX file to 3DS console
-                              Options: -r, --retries <num>  Number of connection retry attempts
+    build [cia]           Build the current project (app or library)
+                          Optional 'cia' argument builds CIA file after successful build
+    add <library_name>    Download and add a library dependency to the project
+    stream <ip> [options] Stream built 3DSX file to 3DS console via homebrew launcher
+                          Options: -r, --retries <num>  Number of connection retry attempts (default: 1)
 
-Options:
+Global Options:
     --help, -h           Show this help message
     --version, -v        Show version information
 
 Examples:
-    orange init app              Create a new 3DS application project
-    orange init library          Create a new 3DS library project
-    orange add mylib             Add 'mylib' library as a dependency
-    orange stream 192.168.1.100  Stream to 3DS at IP 192.168.1.100
-    orange stream 192.168.1.100 --retries 5  Stream with 5 retry attempts";
+    orange init app                     Create a new 3DS application project
+    orange init library                 Create a new 3DS library project
+    orange sync                         Download all dependencies from current project config
+    orange build                        Build the current project to ELF and 3DSX
+    orange build cia                    Build the current project and create CIA file
+    orange add mylib                    Add 'mylib' library as a dependency
+    orange stream 192.168.1.100         Stream to 3DS at IP 192.168.1.100
+    orange stream 192.168.1.100 -r 3    Stream with 3 retry attempts
+
+Notes:
+    - Ensure your 3DS is running homebrew launcher when using 'stream'
+    - CIA building requires makerom, bannertool, and ffmpeg to be in PATH
+    - Use 'orange init' in an empty directory to create a new project";
         static readonly string _help = V;
         private const string Version = "v1.1.0"; // Incremented version for refactor
 
@@ -69,6 +80,7 @@ Examples:
                         Console.WriteLine($"Orange Version: {Version}");
                         break;
                     case "--help":
+                    case "-h":
                         ShowHelp();
                         break;
                     default:
@@ -214,7 +226,7 @@ Examples:
         {
             if (args.Length < 2)
             {
-                LogError("Usage: orange stream <3DS_IP_ADDRESS> (--retries <n>)");
+                LogError("Usage: orange stream <3DS_IP_ADDRESS> [--retries <num>]");
                 return;
             }
             string ip = args[1];

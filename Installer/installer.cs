@@ -6,7 +6,7 @@ using System.Security.Principal; // For Windows admin check
 using System.Text.Json;
 using System.Threading.Tasks;
 using OrangeLib;
-using CollinExecute;
+
 
 namespace Installer
 {
@@ -73,17 +73,23 @@ namespace Installer
 
         static void ShowHelp()
         {
+            Console.WriteLine("Orange Installer - Install Orange DevkitPro Library Manager");
+            Console.WriteLine();
             Console.WriteLine("Usage: Installer [options]");
+            Console.WriteLine();
             Console.WriteLine("Options:");
             Console.WriteLine("  --help, -h        Show this help message");
-            Console.WriteLine("  --uninstall, -u   Uninstall Orange");
-            Console.WriteLine("  --version, -v     Specify version to install (e.g., v1.0.0)");
+            Console.WriteLine("  --uninstall, -u   Uninstall Orange from the system");
+            Console.WriteLine("  --version, -v     Specify version to install (e.g., v1.0.2)");
             Console.WriteLine();
             Console.WriteLine("Default behavior (no options): Install latest Orange version");
             Console.WriteLine();
             Console.WriteLine("Examples:");
-            Console.WriteLine("  Installer                    # Install latest version");
-            Console.WriteLine("  Installer --version v1.0.2   # Install specific version");
+            Console.WriteLine("  Installer                     # Install latest version");
+            Console.WriteLine("  Installer --version v1.0.2    # Install specific version");
+            Console.WriteLine("  Installer --uninstall         # Remove Orange from system");
+            Console.WriteLine();
+            Console.WriteLine("Note: Administrator/root privileges required for installation");
         }
 
         static async Task InstallOrangeAsync(string? targetVersion = null)
@@ -135,11 +141,11 @@ namespace Installer
                 // Download ffmpeg from package managers.
                 if (Program.IsWindows())
                 {
-                    CollinExecute.Shell.SystemCommand("winget install ffmpeg");
+                    Utils.ExecuteShellCommand("winget install ffmpeg");
                 }
                 else if (Program.IsLinux())
                 {
-                    CollinExecute.Shell.SystemCommand("sudo apt install ffmpeg");
+                    Utils.ExecuteShellCommand("sudo apt install ffmpeg");
                 }
                 else
                 {
@@ -534,6 +540,23 @@ namespace Installer
             }
         }
 
+        static string GetBannertoolPlatformBinaryName()
+        {
+            if (IsWindows())
+            {
+                return "bannertool.exe";
+            }
+            else if (IsLinux())
+            {
+                return "bannertool";
+            }
+            else
+            {
+                // Return an empty string to indicate unsupported platforms
+                return string.Empty;
+            }
+        }
+
         static string GetInstallDirectory()
         {
             if (IsWindows())
@@ -549,12 +572,10 @@ namespace Installer
 
         static void MakeExecutable(string filePath)
         {
-            // Make file executable on Unix systems using CollinExecute when available
+            // Make file executable on Unix systems using built-in shell command execution
             string chmodCommand = $"chmod +x \"{filePath}\"";
             
-    
-            
-            bool success = CollinExecute.Shell.SystemCommand(chmodCommand);
+            bool success = Utils.ExecuteShellCommand(chmodCommand);
             if (success)
             {
                 Console.WriteLine("Made Orange executable.");
@@ -581,11 +602,10 @@ namespace Installer
         {
             try
             {
-                // Use PowerShell to add to user PATH with CollinExecute when available
+                // Use PowerShell to add to user PATH
                 string command = $"powershell -Command \"$env:PATH += ';{directory}'; [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'User')\"";
-  
                 
-                bool success = CollinExecute.Shell.SystemCommand(command);
+                bool success = Utils.ExecuteShellCommand(command);
                 if (success)
                 {
                     Console.WriteLine("Added to Windows PATH.");
@@ -676,11 +696,10 @@ namespace Installer
         {
             try
             {
-                // Use PowerShell to remove from user PATH with CollinExecute when available
+                // Use PowerShell to remove from user PATH
                 string command = $"powershell -Command \"$path = [Environment]::GetEnvironmentVariable('PATH', 'User'); $newPath = $path -replace [regex]::Escape(';{directory}'), ''; [Environment]::SetEnvironmentVariable('PATH', $newPath, 'User')\"";
                 
-                
-                bool success = CollinExecute.Shell.SystemCommand(command);
+                bool success = Utils.ExecuteShellCommand(command);
                 if (success)
                 {
                     Console.WriteLine("Removed from Windows PATH.");

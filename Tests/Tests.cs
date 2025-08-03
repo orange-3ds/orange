@@ -224,25 +224,25 @@ namespace Tests
         }
 
         [Fact]
-        public void ArrayToStringSpaceSeperate_WithValidArray_ReturnsSpaceSeparatedString()
+        public void ArrayToStringSpaceSeparate_WithValidArray_ReturnsSpaceSeparatedString()
         {
             var array = new string[] { "dep1", "dep2", "dep3" };
-            var result = libraryInfo.ArrayToStringSpaceSeperate(array);
+            var result = libraryInfo.ArrayToStringSpaceSeparate(array);
             Assert.Equal("dep1 dep2 dep3", result);
         }
 
         [Fact]
-        public void ArrayToStringSpaceSeperate_WithEmptyArray_ReturnsEmptyString()
+        public void ArrayToStringSpaceSeparate_WithEmptyArray_ReturnsEmptyString()
         {
             var array = new string[] { };
-            var result = libraryInfo.ArrayToStringSpaceSeperate(array);
+            var result = libraryInfo.ArrayToStringSpaceSeparate(array);
             Assert.Equal(string.Empty, result);
         }
 
         [Fact]
-        public void ArrayToStringSpaceSeperate_WithNullArray_ReturnsEmptyString()
+        public void ArrayToStringSpaceSeparate_WithNullArray_ReturnsEmptyString()
         {
-            var result = libraryInfo.ArrayToStringSpaceSeperate(null!);
+            var result = libraryInfo.ArrayToStringSpaceSeparate(null!);
             Assert.Equal(string.Empty, result);
         }
 
