@@ -731,7 +731,7 @@ Examples:
             }
             else
             {
-                expectedName = String.Empty; // macOS not supported
+                expectedName = null; // macOS not supported
             }
 
             // Since GetMakeromPlatformBinaryName is internal, we can't test it directly
