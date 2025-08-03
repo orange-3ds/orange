@@ -13,36 +13,8 @@
 
 
   <ItemGroup>
-    <ProjectReference Include="..\Bannertool.net\Bannertool.net.csproj" />
     <ProjectReference Include="..\configlibnet\configlibnet.csproj" />
   </ItemGroup>
 
-
-  <ItemGroup>
-    <Reference Include="Bannertool.net">
-      <HintPath>..\deps\Bannertool.net.dll</HintPath>
-    </Reference>
-    <Reference Include="NAudio">
-      <HintPath>..\deps\NAudio.dll</HintPath>
-    </Reference>
-    <Reference Include="NAudio.Asio">
-      <HintPath>..\deps\NAudio.Asio.dll</HintPath>
-    </Reference>
-    <Reference Include="NAudio.Core">
-      <HintPath>..\deps\NAudio.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="NAudio.Midi">
-      <HintPath>..\deps\NAudio.Midi.dll</HintPath>
-    </Reference>
-    <Reference Include="NAudio.Wasapi">
-      <HintPath>..\deps\NAudio.Wasapi.dll</HintPath>
-    </Reference>
-    <Reference Include="NAudio.WinMM">
-      <HintPath>..\deps\NAudio.WinMM.dll</HintPath>
-    </Reference>
-    <Reference Include="SixLabors.ImageSharp">
-      <HintPath>..\deps\SixLabors.ImageSharp.dll</HintPath>
-    </Reference>
-  </ItemGroup>
 
 </Project>

@@ -5,22 +5,15 @@ namespace OrangeLib
 {
     public static class AudioConverter
     {
-        /// <summary>
-        /// Converts a WAV audio file to a specific format using ffmpeg.
-        /// The output format is 16-bit PCM, 32,000 Hz, stereo.
-        /// </summary>
-        /// <param name="inputPath">The path to the input WAV file.</param>
-        /// <param name="outputPath">The path for the converted output WAV file.</param>
-        /// <returns>A task that returns true if conversion is successful, otherwise false.</returns>
         public static async Task<bool> ConvertWavTo3dsFormatAsync(string inputPath, string outputPath)
         {
-            // ffmpeg arguments for converting to 16-bit PCM, 32kHz, stereo.
-            // -y: Overwrite output file if it exists
-            // -i: Input file
-            // -ar: Audio sample rate
-            // -ac: Audio channels (2 for stereo)
-            // -c:a: Audio codec (pcm_s16le for 16-bit signed little-endian PCM)
-            string arguments = $"-y -i \"{inputPath}\" -ar 32000 -ac 2 -c:a pcm_s16le \"{outputPath}\"";
+            // Corrected ffmpeg arguments for 3DS banner audio:
+            // -ar 32000: Sets the sample rate to 32,000 Hz.
+            // -t 3: Ensures the audio is no longer than 3 seconds.
+            // -map_metadata -1: Removes all metadata to prevent compatibility issues.
+            // -fflags +bitexact: Ensures a clean, bit-exact WAV file.
+            string arguments = $"-y -i \"{inputPath}\" -t 3 -ar 32000 -ac 2 -c:a pcm_s16le -map_metadata -1 -fflags +bitexact \"{outputPath}\"";
+
 
             var processStartInfo = new ProcessStartInfo
             {

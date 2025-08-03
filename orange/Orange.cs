@@ -20,7 +20,7 @@ Commands:
     stream [ip] (--retries n) Streams the built .3dsx file to a 3DS running a homebrew loader.
     --help                    Displays this help information.
     --version                 Displays the tool version.";
-        private const string Version = "v1.0.3"; // Incremented version for refactor
+        private const string Version = "v1.0.5"; // Incremented version for refactor
 
         // Main entry point is now async to allow for top-level await.
         static async Task Main(string[] args)
@@ -119,8 +119,7 @@ Commands:
                     info.Title,
                     info.Description,
                     info.Author,
-                    "assets/icon-large.png",
-                    "assets/icon-small.png",
+                    "assets/icon.png",
                     "assets/banner.png",
                     "assets/banner_audio.wav" // Pass the ORIGINAL audio file.
                 );
