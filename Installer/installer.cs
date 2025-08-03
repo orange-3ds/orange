@@ -132,7 +132,7 @@ namespace Installer
                     Console.WriteLine($"Downloaded bannertool binary: {bannertoolExePath}");
                 }
 
-                // Download ffmeg from package managers.
+                // Download ffmpeg from package managers.
                 if (Program.IsWindows())
                 {
                     CollinExecute.Shell.SystemCommand("winget install ffmpeg");
