@@ -496,7 +496,7 @@ namespace Installer
             }
             catch (Exception ex)
             {
-                await Console.Error.WriteLineAsync($"Failed to download makerom binary: {ex.Message}");
+                await Console.Error.WriteLineAsync($"Failed to download bannertool binary: {ex.Message}");
                 return string.Empty;
             }
         }
