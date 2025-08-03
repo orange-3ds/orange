@@ -120,6 +120,18 @@ namespace Installer
                 {
                     Console.WriteLine($"Downloaded makerom binary: {makeromExePath}");
                 }
+
+                // Download bannertool binary
+                string bannertoolExePath = await DownloadBannertoolBinaryAsync();
+                if (string.IsNullOrEmpty(bannertoolExePath))
+                {
+                    await Console.Error.WriteLineAsync("Warning: Failed to download bannertool binary. Continuing with Orange installation only.");
+                }
+                else
+                {
+                    Console.WriteLine($"Downloaded bannertool binary: {bannertoolExePath}");
+                }
+
                 // Download ffmeg from package managers.
                 if (Program.IsWindows())
                 {
@@ -164,6 +176,20 @@ namespace Installer
                     }
                 }
 
+                // Copy bannertool executable to installation directory if downloaded successfully
+                if (!string.IsNullOrEmpty(bannertoolExePath))
+                {
+                    string targetBannertoolExePath = Path.Combine(installDir, Path.GetFileName(bannertoolExePath));
+                    File.Copy(bannertoolExePath, targetBannertoolExePath, true);
+                    Console.WriteLine("Copied bannertool executable.");
+
+                    // Make bannertool executable on Unix systems
+                    if (!IsWindows())
+                    {
+                        MakeExecutable(targetBannertoolExePath);
+                    }
+                }
+
                 // Make Orange executable on Unix systems
                 if (!IsWindows())
                 {
@@ -181,6 +207,10 @@ namespace Installer
                     {
                         File.Delete(makeromExePath);
                     }
+                    if (!string.IsNullOrEmpty(bannertoolExePath))
+                    {
+                        File.Delete(bannertoolExePath);
+                    }
                 }
                 catch
                 {
@@ -191,6 +221,10 @@ namespace Installer
                 if (!string.IsNullOrEmpty(makeromExePath))
                 {
                     Console.WriteLine("✓ makerom has been installed successfully!");
+                }
+                if (!string.IsNullOrEmpty(bannertoolExePath))
+                {
+                    Console.WriteLine("✓ bannertool has been installed successfully!");
                 }
                 
                 if (!IsWindows())
@@ -413,7 +447,60 @@ namespace Installer
                 return string.Empty;
             }
         }
-        
+        static async Task<string> DownloadBannertoolBinaryAsync()
+        {
+            try
+            {
+                // Check if platform is supported
+                string binaryName = GetMakeromPlatformBinaryName();
+                if (string.IsNullOrEmpty(binaryName))
+                {
+                    Console.WriteLine("Warning: makerom is not supported on the current platform.");
+                    Console.WriteLine($"Platform: {RuntimeInformation.OSDescription}. Skipping makerom installation.");
+                    return string.Empty;
+                }
+
+                Console.WriteLine($"Downloading makerom binary: {binaryName}");
+
+                using (var httpClient = new HttpClient())
+                {
+                    httpClient.DefaultRequestHeaders.Add("User-Agent", "Orange-Installer/1.0");
+
+                    // Direct download URLs from orange.collinsoftware.dev
+                    string downloadUrl;
+                    if (IsWindows())
+                    {
+                        downloadUrl = "https://orange.collinsoftware.dev/bannertool/bannertool.exe";
+                    }
+                    else if (IsLinux())
+                    {
+                        downloadUrl = "https://orange.collinsoftware.dev/bannertool/bannertool";
+                    }
+                    else
+                    {
+                        return string.Empty; // Should not reach here due to earlier check
+                    }
+
+                    Console.WriteLine($"Downloading bannertool from: {downloadUrl}");
+
+                    // Download the binary
+                    byte[] binaryData = await httpClient.GetByteArrayAsync(downloadUrl);
+
+                    // Save to temporary file
+                    string tempFileName = binaryName;
+                    string tempPath = Path.Combine(Path.GetTempPath(), tempFileName);
+                    await File.WriteAllBytesAsync(tempPath, binaryData);
+                    Console.WriteLine($"Downloaded bannertool binary to: {tempPath}");
+                    return tempPath;
+                }
+            }
+            catch (Exception ex)
+            {
+                await Console.Error.WriteLineAsync($"Failed to download makerom binary: {ex.Message}");
+                return string.Empty;
+            }
+        }
+
         static string GetPlatformBinaryName()
         {
             if (IsWindows())
