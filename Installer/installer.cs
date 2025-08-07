@@ -781,27 +781,36 @@ namespace Installer
 
         private static IntPtr libcHandle = IntPtr.Zero;
         private delegate uint GetUidDelegate();
-        private static GetUidDelegate getuid;
+        private static GetUidDelegate? getuid;
 
         static Program()
         {
-            // Attempt to load libc dynamically
-            string[] libcNames = { "libc.so.6", "libc" };
-            foreach (var name in libcNames)
+            // Only attempt to load libc on Unix systems (Linux/macOS)
+            if (!IsWindows())
             {
-                if (NativeLibrary.TryLoad(name, out libcHandle))
+                // Attempt to load libc dynamically
+                string[] libcNames = { "libc.so.6", "libc" };
+                foreach (var name in libcNames)
                 {
-                    IntPtr getuidPtr = NativeLibrary.GetExport(libcHandle, "getuid");
-                    getuid = Marshal.GetDelegateForFunctionPointer<GetUidDelegate>(getuidPtr);
-                    break;
+                    if (NativeLibrary.TryLoad(name, out libcHandle))
+                    {
+                        IntPtr getuidPtr = NativeLibrary.GetExport(libcHandle, "getuid");
+                        getuid = Marshal.GetDelegateForFunctionPointer<GetUidDelegate>(getuidPtr);
+                        break;
+                    }
+                }
+
+                if (libcHandle == IntPtr.Zero || getuid == null)
+                {
+                    throw new InvalidOperationException("Failed to load libc or locate getuid function.");
                 }
             }
-
-            if (libcHandle == IntPtr.Zero || getuid == null)
-            {
-                throw new InvalidOperationException("Failed to load libc or locate getuid function.");
-            }
         }
-        private static int GetUnixUid() => (int)getuid();
+        private static int GetUnixUid()
+        {
+            if (getuid == null)
+                throw new InvalidOperationException("getuid function is not available on this platform.");
+            return (int)getuid();
+        }
     }
 }
