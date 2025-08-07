@@ -806,6 +806,11 @@ namespace Installer
                 }
             }
         }
-        private static int GetUnixUid() => getuid != null ? (int)getuid() : -1;
+        private static int GetUnixUid()
+        {
+            if (getuid == null)
+                throw new InvalidOperationException("getuid function is not available on this platform.");
+            return (int)getuid();
+        }
     }
 }
